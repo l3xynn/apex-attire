@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APEX ATTIRE | Streetwear</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  >
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <a class="brand-logo" href="#">APEX ATTIRE</a>
+
+    <button
+      class="menu-toggle"
+      type="button"
+      aria-label="Open navigation"
+      aria-expanded="false"
+      aria-controls="main-navigation"
+    >
+      <svg class="menu-icon menu-icon-open" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7H20M4 12H20M4 17H20"></path>
+      </svg>
+
+      <svg class="menu-icon menu-icon-close" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 6L18 18M18 6L6 18"></path>
+      </svg>
+    </button>
+
+    <nav class="main-nav" id="main-navigation" aria-label="Main navigation">
+      <a href="#shop">Shop</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="shop-section" id="shop">
+      <p class="eyebrow">Lagos Streetwear</p>
+      <h1>Built for the everyday uniform.</h1>
+      <p class="intro-text">
+        Clean staples, considered accessories, and confident everyday pieces.
+      </p>
+
+      <div class="catalogue-search">
+        <label class="visually-hidden" for="product-search">
+          Search the collection
+        </label>
+
+        <input
+          class="search-input"
+          id="product-search"
+          type="search"
+          placeholder="Search the collection"
+        >
+      </div>
+
+      <div class="category-filters" aria-label="Product categories">
+        <button class="filter-button active" type="button" data-filter="all">All</button>
+        <button class="filter-button" type="button" data-filter="apparel">Apparel</button>
+        <button class="filter-button" type="button" data-filter="caps">Caps</button>
+        <button class="filter-button" type="button" data-filter="jewellery">Jewellery</button>
+        <button class="filter-button" type="button" data-filter="totes">Totes</button>
+        <button class="filter-button" type="button" data-filter="shoes">Shoes</button>
+      </div>
+
+      <div class="product-grid">
+        <article
+          class="product-card"
+          data-category="apparel"
+          data-description="A heavyweight, relaxed-fit T-shirt designed for daily rotation."
+          data-sizes="S, M, L, XL"
+          data-colour="Black"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85"
+            alt="Black APEX ATTIRE oversized T-shirt"
+          >
+          <div class="product-info">
+            <p class="product-category">Apparel</p>
+            <h2>Core Oversized Tee</h2>
+            <p class="product-price">₦18,000</p>
+            <button class="view-details-button" type="button">View details</button>
+          </div>
+        </article>
+
+        <article
+          class="product-card"
+          data-category="shoes"
+          data-description="A clean low-profile sneaker for everyday city wear."
+          data-sizes="40, 41, 42, 43, 44"
+          data-colour="Off-white"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261e?auto=format&fit=crop&w=900&q=85"
+            alt="Minimal white streetwear sneakers"
+          >
+          <div class="product-info">
+            <p class="product-category">Shoes</p>
+            <h2>Everyday Sneaker</h2>
+            <p class="product-price">₦42,000</p>
+            <button class="view-details-button" type="button">View details</button>
+          </div>
+        </article>
+
+        <article
+          class="product-card"
+          data-category="caps"
+          data-description="A structured cap with a minimal, everyday streetwear profile."
+          data-sizes="One size"
+          data-colour="Black"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85"
+            alt="Black streetwear cap"
+          >
+          <div class="product-info">
+            <p class="product-category">Caps</p>
+            <h2>Signature Cap</h2>
+            <p class="product-price">₦12,500</p>
+            <button class="view-details-button" type="button">View details</button>
+          </div>
+        </article>
+
+        <article
+          class="product-card"
+          data-category="jewellery"
+          data-description="A polished silver-tone ring set for understated layering."
+          data-sizes="Adjustable"
+          data-colour="Silver"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=900&q=85"
+            alt="Silver rings and jewellery"
+          >
+          <div class="product-info">
+            <p class="product-category">Jewellery</p>
+            <h2>Silver Ring Set</h2>
+            <p class="product-price">₦9,000</p>
+            <button class="view-details-button" type="button">View details</button>
+          </div>
+        </article>
+
+        <article
+          class="product-card"
+          data-category="apparel"
+          data-description="A relaxed heavyweight hoodie built for cooler evenings."
+          data-sizes="S, M, L, XL"
+          data-colour="Charcoal"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=900&q=85"
+            alt="Neutral oversized hoodie"
+          >
+          <div class="product-info">
+            <p class="product-category">Apparel</p>
+            <h2>Heavyweight Hoodie</h2>
+            <p class="product-price">₦32,000</p>
+            <button class="view-details-button" type="button">View details</button>
+          </div>
+        </article>
+
+        <article
+          class="product-card"
+          data-category="totes"
+          data-description="A durable canvas tote for daily essentials."
+          data-sizes="One size"
+          data-colour="Natural canvas"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1622560480654-d96214fdc887?auto=format&fit=crop&w=900&q=85"
+            alt="Canvas tote bag"
+          >
+          <div class="product-info">
+            <p class="product-category">Totes</p>
+            <h2>Canvas Carry Tote</h2>
+            <p class="product-price">₦8,500</p>
+            <button class="view-details-button" type="button">View details</button>
+          </div>
+        </article>
+      </div>
+
+      <p class="no-products-message" hidden>
+        No products match your search.
+      </p>
+
+      <p class="orders-note">
+        Online ordering opens soon. Lagos State delivery only.
+      </p>
+    </section>
+
+    <section class="about-section" id="about">
+      <p class="eyebrow">About APEX ATTIRE</p>
+      <h2>Streetwear for the everyday rotation.</h2>
+      <p>
+        APEX ATTIRE is a Lagos-based clothing brand focused on confident,
+        versatile pieces for modern everyday wear.
+      </p>
+    </section>
+  </main>
+
+  <dialog class="product-dialog">
+    <button class="dialog-close-button" type="button" aria-label="Close product details">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 6L18 18M18 6L6 18"></path>
+      </svg>
+    </button>
+
+    <img class="dialog-image" src="" alt="">
+
+    <div class="dialog-content">
+      <p class="dialog-category"></p>
+      <h2 class="dialog-title"></h2>
+      <p class="dialog-price"></p>
+      <p class="dialog-description"></p>
+
+      <div class="product-meta">
+        <p><span>Sizes</span><strong class="dialog-sizes"></strong></p>
+        <p><span>Colour</span><strong class="dialog-colour"></strong></p>
+      </div>
+
+      <p class="dialog-order-note">
+        Online ordering opens soon. Lagos State delivery only.
+      </p>
+    </div>
+  </dialog>
+
+  <footer class="site-footer" id="contact">
+    <p>APEX ATTIRE — Lagos State, Nigeria</p>
+    <a href="mailto:omenaikevin@gmail.com">omenaikevin@gmail.com</a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
