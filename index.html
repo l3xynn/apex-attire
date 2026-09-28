@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>APEX ATTIRE | Streetwear</title>
+  <meta name="description" content="APEX ATTIRE is a Lagos-based streetwear brand. Clean staples, considered accessories and confident everyday pieces.">
+  <meta name="theme-color" content="#0b0b0b">
+
+  <meta property="og:title" content="APEX ATTIRE | Streetwear">
+  <meta property="og:description" content="Clean staples, considered accessories and confident everyday pieces from Lagos.">
+  <meta property="og:type" content="website">
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230b0b0b'/%3E%3Ctext x='50' y='70' font-size='62' font-weight='700' text-anchor='middle' fill='%23f5f3ee' font-family='Arial'%3EA%3C/text%3E%3C/svg%3E">
+
+  <script>document.documentElement.classList.add("js");</script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,11 +25,18 @@
 </head>
 
 <body>
+  <a class="skip-link" href="#shop">Skip to products</a>
+
+  <div class="announcement-bar" hidden>
+    <p class="announcement-text"></p>
+  </div>
+
   <header class="site-header">
-    <a class="brand-logo" href="#">APEX ATTIRE</a>
+    <a class="brand-logo" href="#top">APEX ATTIRE</a>
 
     <nav class="main-nav" id="main-navigation" aria-label="Main navigation">
       <a href="#shop">Shop</a>
+      <a href="#delivery">Delivery</a>
       <a href="#about">About</a>
       <a href="#contact">Contact</a>
     </nav>
@@ -30,7 +47,7 @@
           <path d="M6 8H18L17 20H7L6 8ZM9 8V6A3 3 0 0 1 15 6V8"></path>
         </svg>
         <span>Bag</span>
-        <span class="bag-count">0</span>
+        <span class="bag-count" data-count="0">0</span>
       </button>
 
       <button
@@ -52,161 +69,182 @@
   </header>
 
   <main>
-    <section class="shop-section" id="shop">
+    <section class="hero">
       <p class="eyebrow">Lagos Streetwear</p>
       <h1>Built for the everyday uniform.</h1>
       <p class="intro-text">
         Clean staples, considered accessories, and confident everyday pieces.
       </p>
 
-      <div class="catalogue-search">
-        <label class="visually-hidden" for="product-search">
-          Search the collection
-        </label>
+      <div class="hero-actions">
+        <a class="button button-primary" href="#shop">Shop the collection</a>
+        <a class="button button-secondary" href="#delivery">Delivery info</a>
+      </div>
+    </section>
 
-        <input
-          class="search-input"
-          id="product-search"
-          type="search"
-          placeholder="Search the collection"
-        >
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <div class="marquee-group">
+          <span>Lagos Streetwear</span>
+          <span>Everyday Uniform</span>
+          <span>Clean Staples</span>
+          <span>Considered Accessories</span>
+        </div>
+        <div class="marquee-group">
+          <span>Lagos Streetwear</span>
+          <span>Everyday Uniform</span>
+          <span>Clean Staples</span>
+          <span>Considered Accessories</span>
+        </div>
+      </div>
+    </div>
+
+        <section class="shop-section" id="shop">
+      <div class="section-heading reveal">
+        <p class="eyebrow shop-eyebrow">Best sellers</p>
+        <h2 class="shop-title">Customer favourites</h2>
       </div>
 
-      <div class="category-filters" aria-label="Product categories">
-        <button class="filter-button active" type="button" data-filter="all">All</button>
-        <button class="filter-button" type="button" data-filter="apparel">Apparel</button>
-        <button class="filter-button" type="button" data-filter="caps">Caps</button>
-        <button class="filter-button" type="button" data-filter="jewellery">Jewellery</button>
-        <button class="filter-button" type="button" data-filter="totes">Totes</button>
-        <button class="filter-button" type="button" data-filter="shoes">Shoes</button>
+      <div class="catalogue-toolbar" hidden>
+        <div class="catalogue-search">
+          <label class="visually-hidden" for="product-search">
+            Search the collection
+          </label>
+
+          <input
+            class="search-input"
+            id="product-search"
+            type="search"
+            placeholder="Search the collection"
+            autocomplete="off"
+          >
+        </div>
+
+        <div class="catalogue-sort">
+          <label for="product-sort">Sort by</label>
+          <select class="sort-select" id="product-sort">
+            <option value="featured">Featured</option>
+            <option value="price-low">Price: Low to high</option>
+            <option value="price-high">Price: High to low</option>
+          </select>
+        </div>
       </div>
 
-      <div class="product-grid">
-        <article class="product-card" data-product-id="apx-tee-001" data-category="apparel" data-price="18000" data-description="A heavyweight, relaxed-fit T-shirt designed for daily rotation." data-sizes="S, M, L, XL" data-colour="Black">
-          <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85" alt="Black APEX ATTIRE oversized T-shirt">
-          <div class="product-info">
-            <p class="product-category">Apparel</p>
-            <h2>Core Oversized Tee</h2>
-            <p class="product-price">₦18,000</p>
-            <button class="view-details-button" type="button">View details</button>
-          </div>
-        </article>
+      <!-- Filter buttons are created from products.js -->
+      <div class="category-filters" role="group" aria-label="Product categories" hidden></div>
 
-        <article class="product-card" data-product-id="apx-snk-001" data-category="shoes" data-price="42000" data-description="A clean low-profile sneaker for everyday city wear." data-sizes="40, 41, 42, 43, 44" data-colour="Off-white">
-          <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261e?auto=format&fit=crop&w=900&q=85" alt="Minimal white streetwear sneakers">
-          <div class="product-info">
-            <p class="product-category">Shoes</p>
-            <h2>Everyday Sneaker</h2>
-            <p class="product-price">₦42,000</p>
-            <button class="view-details-button" type="button">View details</button>
-          </div>
-        </article>
+      <p class="results-count" role="status" aria-live="polite" hidden></p>
 
-        <article class="product-card" data-product-id="apx-cap-001" data-category="caps" data-price="12500" data-description="A structured cap with a minimal, everyday streetwear profile." data-sizes="One size" data-colour="Black">
-          <img src="https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85" alt="Black streetwear cap">
-          <div class="product-info">
-            <p class="product-category">Caps</p>
-            <h2>Signature Cap</h2>
-            <p class="product-price">₦12,500</p>
-            <button class="view-details-button" type="button">View details</button>
-          </div>
-        </article>
+      <!-- Product cards are created from products.js -->
+      <div class="product-grid"></div>
 
-        <article class="product-card" data-product-id="apx-rng-001" data-category="jewellery" data-price="9000" data-description="A polished silver-tone ring set for understated layering." data-sizes="Adjustable" data-colour="Silver">
-          <img src="https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=900&q=85" alt="Silver rings and jewellery">
-          <div class="product-info">
-            <p class="product-category">Jewellery</p>
-            <h2>Silver Ring Set</h2>
-            <p class="product-price">₦9,000</p>
-            <button class="view-details-button" type="button">View details</button>
-          </div>
-        </article>
+      <noscript>
+        <p class="no-products-message">Please turn on JavaScript to view the collection.</p>
+      </noscript>
 
-        <article class="product-card" data-product-id="apx-hdy-001" data-category="apparel" data-price="32000" data-description="A relaxed heavyweight hoodie built for cooler evenings." data-sizes="S, M, L, XL" data-colour="Charcoal">
-          <img src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=900&q=85" alt="Neutral oversized hoodie">
-          <div class="product-info">
-            <p class="product-category">Apparel</p>
-            <h2>Heavyweight Hoodie</h2>
-            <p class="product-price">₦32,000</p>
-            <button class="view-details-button" type="button">View details</button>
-          </div>
-        </article>
+      <p class="no-products-message" hidden>
+        No products match your search.
+        <button class="reset-filters-button" type="button">Reset filters</button>
+      </p>
 
-        <article class="product-card" data-product-id="apx-tote-001" data-category="totes" data-price="8500" data-description="A durable canvas tote for daily essentials." data-sizes="One size" data-colour="Natural canvas">
-          <img src="https://images.unsplash.com/photo-1622560480654-d96214fdc887?auto=format&fit=crop&w=900&q=85" alt="Canvas tote bag">
-          <div class="product-info">
-            <p class="product-category">Totes</p>
-            <h2>Canvas Carry Tote</h2>
-            <p class="product-price">₦8,500</p>
-            <button class="view-details-button" type="button">View details</button>
-          </div>
-        </article>
+      <div class="shop-more" hidden>
+        <button class="button button-primary shop-all-button" type="button">Shop all items</button>
       </div>
-
-      <p class="no-products-message" hidden>No products match your search.</p>
-      <p class="orders-note">Online ordering opens soon. Lagos State delivery only.</p>
     </section>
 
     <section class="service-section" id="delivery">
-      <p class="eyebrow">Orders and Delivery</p>
-      <h2>Simple terms. Clear delivery.</h2>
+      <div class="reveal">
+        <p class="eyebrow">Orders and Delivery</p>
+        <h2>Simple terms. Clear delivery.</h2>
+      </div>
 
       <div class="service-grid">
-        <article class="service-card">
+        <article class="service-card reveal">
+          <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 6H14V16H3ZM14 9H18L21 12V16H14"></path>
+            <circle cx="7" cy="18" r="1.6"></circle>
+            <circle cx="17" cy="18" r="1.6"></circle>
+          </svg>
           <h3>Lagos Delivery</h3>
           <p>Fixed delivery fee of ₦2,500 anywhere within Lagos State.</p>
         </article>
 
-        <article class="service-card">
+        <article class="service-card reveal">
+          <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 7V12L15 14"></path>
+          </svg>
           <h3>Delivery Time</h3>
           <p>Orders are delivered within 1–3 business days after confirmation.</p>
         </article>
 
-        <article class="service-card">
+        <article class="service-card reveal">
+          <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 9H19L18 20H6L5 9ZM9 9V7A3 3 0 0 1 15 7V9"></path>
+          </svg>
           <h3>Pickup</h3>
           <p>Pickup is available after your order has been confirmed.</p>
         </article>
 
-        <article class="service-card">
+        <article class="service-card reveal">
+          <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 8H18L15 5M20 16H6L9 19"></path>
+          </svg>
           <h3>Exchanges</h3>
           <p>Items may be exchanged within 2 days of receiving your order.</p>
         </article>
       </div>
-
-      <p class="service-note">
-        Online ordering is opening soon. Delivery and pickup details will be confirmed at checkout.
-      </p>
     </section>
 
     <section class="about-section" id="about">
-      <p class="eyebrow">About APEX ATTIRE</p>
-      <h2>Streetwear for the everyday rotation.</h2>
-      <p>
-        APEX ATTIRE is a Lagos-based clothing brand focused on confident,
-        versatile pieces for modern everyday wear.
-      </p>
+      <div class="about-layout">
+        <div class="about-text reveal">
+          <p class="eyebrow">About APEX ATTIRE</p>
+          <h2>Streetwear for the everyday rotation.</h2>
+          <p>
+            APEX ATTIRE is a Lagos-based clothing brand focused on confident,
+            versatile pieces for modern everyday wear.
+          </p>
+        </div>
+
+        <ul class="about-pillars reveal">
+          <li>
+            <strong>Clean staples</strong>
+            <span>Simple, versatile pieces made for daily rotation.</span>
+          </li>
+          <li>
+            <strong>Considered accessories</strong>
+            <span>Caps, jewellery and totes that finish the look.</span>
+          </li>
+          <li>
+            <strong>Confident everyday wear</strong>
+            <span>Streetwear that moves easily from morning to night in Lagos.</span>
+          </li>
+        </ul>
+      </div>
     </section>
   </main>
 
-  <dialog class="product-dialog">
+  <!-- Product details -->
+  <dialog class="product-dialog" aria-labelledby="dialog-title">
     <button class="dialog-close-button" type="button" aria-label="Close product details">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M6 6L18 18M18 6L6 18"></path>
       </svg>
     </button>
 
-    <img class="dialog-image" src="" alt="">
+    <img class="dialog-image" alt="">
 
     <div class="dialog-content">
       <p class="dialog-category"></p>
-      <h2 class="dialog-title"></h2>
+      <h2 class="dialog-title" id="dialog-title"></h2>
       <p class="dialog-price"></p>
       <p class="dialog-description"></p>
 
       <div class="product-meta">
-        <div class="product-meta-row">
-          <label for="product-size">Size</label>
-          <select class="dialog-size-select" id="product-size"></select>
+        <div class="size-group" role="group" aria-labelledby="size-label">
+          <span class="size-label" id="size-label">Size</span>
+          <div class="size-options"></div>
         </div>
 
         <div class="product-meta-row">
@@ -216,15 +254,15 @@
       </div>
 
       <button class="add-to-bag-button" type="button">Add to bag</button>
+      <button class="button button-secondary view-bag-button" type="button" hidden>View bag</button>
       <p class="bag-feedback" role="status" aria-live="polite"></p>
 
-      <p class="dialog-order-note">
-        Online ordering opens soon. Lagos State delivery only.
-      </p>
+      <p class="dialog-policy"></p>
     </div>
   </dialog>
 
-  <dialog class="bag-dialog">
+  <!-- Shopping bag -->
+  <dialog class="bag-dialog" aria-labelledby="bag-title">
     <button class="bag-close-button" type="button" aria-label="Close shopping bag">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M6 6L18 18M18 6L6 18"></path>
@@ -233,9 +271,13 @@
 
     <div class="bag-content">
       <p class="eyebrow">Your Bag</p>
-      <h2>Selected pieces</h2>
+      <h2 id="bag-title">Selected pieces</h2>
 
-      <p class="bag-empty-message">Your bag is empty.</p>
+      <div class="bag-empty">
+        <p class="bag-empty-message">Your bag is empty.</p>
+        <button class="button button-secondary bag-continue-button" type="button">Continue shopping</button>
+      </div>
+
       <div class="bag-items"></div>
 
       <div class="bag-summary" hidden>
@@ -245,39 +287,209 @@
         </p>
 
         <fieldset class="fulfilment-options">
-  <legend>Fulfilment</legend>
+          <legend>Fulfilment</legend>
 
-  <label>
-    <input type="radio" name="fulfilment" value="delivery" checked>
-    <span>Delivery</span>
-    <strong>₦2,500</strong>
-  </label>
+          <label>
+            <input type="radio" name="fulfilment" value="delivery" checked>
+            <span>Delivery</span>
+            <strong>₦2,500</strong>
+          </label>
 
-  <label>
-    <input type="radio" name="fulfilment" value="pickup">
-    <span>Pickup</span>
-    <strong>Free</strong>
-  </label>
-</fieldset>
+          <label>
+            <input type="radio" name="fulfilment" value="pickup">
+            <span>Pickup</span>
+            <strong>Free</strong>
+          </label>
+        </fieldset>
 
-<p class="bag-total">
-  <span>Total</span>
-  <strong class="bag-total-price">₦0</strong>
-</p>
+        <p class="bag-total">
+          <span>Total</span>
+          <strong class="bag-total-price">₦0</strong>
+        </p>
 
-<button class="checkout-button" type="button" disabled>
-  Online ordering opens soon
-</button>
+        <button class="checkout-button" type="button">Checkout</button>
       </div>
     </div>
   </dialog>
 
+  <!-- Checkout -->
+  <dialog class="checkout-dialog" aria-labelledby="checkout-title">
+    <button class="checkout-close-button" type="button" aria-label="Close checkout">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 6L18 18M18 6L6 18"></path>
+      </svg>
+    </button>
+
+    <!-- Step 1: details form -->
+    <div class="checkout-view checkout-form-view">
+      <div class="checkout-layout">
+        <form class="checkout-form" novalidate>
+          <button class="checkout-back-button" type="button">← Back to bag</button>
+
+          <p class="eyebrow">Checkout</p>
+          <h2 id="checkout-title">Your details</h2>
+
+          <div class="form-field">
+            <label for="checkout-name">Full name</label>
+            <input id="checkout-name" name="name" type="text" autocomplete="name" aria-describedby="checkout-name-error">
+            <p class="field-error" id="checkout-name-error"></p>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label for="checkout-phone">Phone number</label>
+              <input id="checkout-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0801 234 5678" aria-describedby="checkout-phone-error">
+              <p class="field-error" id="checkout-phone-error"></p>
+            </div>
+
+            <div class="form-field">
+              <label for="checkout-email">Email <span class="optional" id="checkout-email-optional">(optional)</span></label>
+              <input id="checkout-email" name="email" type="email" autocomplete="email" aria-describedby="checkout-email-error">
+              <p class="field-error" id="checkout-email-error"></p>
+            </div>
+          </div>
+
+          <div class="delivery-fields">
+            <div class="form-field">
+              <label for="checkout-area">Delivery area</label>
+              <select id="checkout-area" name="area" autocomplete="address-level2" aria-describedby="checkout-area-error">
+                <option value="">Select your area</option>
+              </select>
+              <p class="field-error" id="checkout-area-error"></p>
+            </div>
+
+            <div class="form-field">
+              <label for="checkout-address">Delivery address</label>
+              <textarea id="checkout-address" name="address" rows="3" autocomplete="street-address" placeholder="House number, street, landmark" aria-describedby="checkout-address-error"></textarea>
+              <p class="field-error" id="checkout-address-error"></p>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="checkout-notes">Order notes <span class="optional">(optional)</span></label>
+            <textarea id="checkout-notes" name="notes" rows="2" placeholder="Anything we should know?"></textarea>
+          </div>
+
+          <fieldset class="payment-options">
+            <legend>Payment method</legend>
+
+            <label class="paystack-option" hidden>
+              <input type="radio" name="payment" value="paystack">
+              <span>
+                Pay online now
+                <small>Card, bank transfer or USSD via Paystack</small>
+              </span>
+            </label>
+
+            <label>
+              <input type="radio" name="payment" value="cod" checked>
+              <span>Pay when you receive</span>
+            </label>
+
+            <label>
+              <input type="radio" name="payment" value="transfer">
+              <span>Bank transfer</span>
+            </label>
+          </fieldset>
+
+          <p class="test-card-note" hidden>
+            <strong>Test mode.</strong> Use card <code>4084 0840 8408 4081</code>,
+            any future expiry date and CVV <code>408</code>. No real money is charged.
+          </p>
+
+          <p class="payment-error" role="alert" hidden></p>
+
+          <button class="place-order-button" type="submit">Place order</button>
+        </form>
+
+        <aside class="checkout-summary" aria-label="Order summary">
+          <h3>Order summary</h3>
+
+          <div class="checkout-summary-items"></div>
+
+          <div class="summary-totals">
+            <p>
+              <span>Subtotal</span>
+              <strong class="checkout-subtotal">₦0</strong>
+            </p>
+            <p>
+              <span class="checkout-fulfilment-label">Delivery</span>
+              <strong class="checkout-delivery">₦0</strong>
+            </p>
+            <p class="summary-total-row">
+              <span>Total</span>
+              <strong class="checkout-total">₦0</strong>
+            </p>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Step 2: order placed -->
+    <div class="checkout-view checkout-success" hidden>
+      <svg class="success-icon" viewBox="0 0 72 72" aria-hidden="true">
+        <circle cx="36" cy="36" r="24"></circle>
+        <path d="M25 37L33 45L48 28"></path>
+      </svg>
+
+      <p class="eyebrow">Thank you</p>
+      <h2 class="success-title" tabindex="-1">Order placed</h2>
+      <p class="success-message"></p>
+      <p class="success-order-number"></p>
+
+      <div class="success-details">
+        <div class="success-items"></div>
+
+        <div class="success-totals">
+          <p><span>Subtotal</span><strong class="success-subtotal"></strong></p>
+          <p><span>Delivery</span><strong class="success-delivery"></strong></p>
+          <p class="success-total-row"><span>Total</span><strong class="success-total"></strong></p>
+        </div>
+
+        <div class="success-info">
+          <p><span>Fulfilment</span><strong class="success-fulfilment"></strong></p>
+          <p><span>Payment</span><strong class="success-payment"></strong></p>
+          <p class="success-reference-row" hidden><span>Payment ref</span><strong class="success-reference"></strong></p>
+          <p><span>Phone</span><strong class="success-phone"></strong></p>
+        </div>
+      </div>
+
+      <p class="success-next"></p>
+      <p class="success-demo-note">Demo: no real order or payment was made.</p>
+
+      <button class="button button-primary success-continue-button" type="button">Continue shopping</button>
+    </div>
+  </dialog>
+
   <footer class="site-footer" id="contact">
-    <p>APEX ATTIRE — Lagos State, Nigeria</p>
-    <a href="mailto:omenaikevin@gmail.com">omenaikevin@gmail.com</a>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="brand-logo" href="#top">APEX ATTIRE</a>
+        <p>Clean staples and confident everyday pieces from Lagos, Nigeria.</p>
+      </div>
+
+      <div class="footer-column">
+        <h3>Explore</h3>
+        <a href="#shop">Shop</a>
+        <a href="#delivery">Delivery</a>
+        <a href="#about">About</a>
+      </div>
+
+      <div class="footer-column footer-contact">
+        <h3>Contact</h3>
+        <a href="mailto:omenaikevin@gmail.com">omenaikevin@gmail.com</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© <span class="footer-year"></span> APEX ATTIRE — Lagos State, Nigeria</p>
+      <a href="#top">Back to top ↑</a>
+    </div>
   </footer>
 
+  <script src="https://js.paystack.co/v2/inline.js"></script>
   <script src="store-config.js"></script>
+  <script src="products.js"></script>
   <script src="cart.js"></script>
   <script src="script.js"></script>
 </body>
