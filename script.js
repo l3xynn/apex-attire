@@ -12,14 +12,25 @@ const menuToggle = document.querySelector(".menu-toggle");
 const mainNavigation = document.querySelector(".main-nav");
 const navigationLinks = document.querySelectorAll(".main-nav a");
 
+const siteSearchForm = document.querySelector(".header-search");
+const siteSearchInput = document.querySelector("#site-search-input");
+const searchWrap = document.querySelector(".header-search-wrap");
+const searchPanel = document.querySelector(".search-panel");
+const searchQuick = document.querySelector(".search-quick");
+const searchChips = document.querySelector(".search-chips");
+const searchStatus = document.querySelector(".search-status");
+const searchResults = document.querySelector(".search-results");
+const searchViewAll = document.querySelector(".search-viewall");
+const searchSummary = document.querySelector(".search-summary");
+const searchSummaryText = document.querySelector(".search-summary-text");
+const searchSummaryClear = document.querySelector(".search-summary-clear");
+
 const shopEyebrow = document.querySelector(".shop-eyebrow");
 const shopTitle = document.querySelector(".shop-title");
 const catalogueToolbar = document.querySelector(".catalogue-toolbar");
 const categoryFilters = document.querySelector(".category-filters");
 const productGrid = document.querySelector(".product-grid");
-const productSearch = document.querySelector("#product-search");
 const productSort = document.querySelector("#product-sort");
-const resultsCount = document.querySelector(".results-count");
 const noProductsMessage = document.querySelector(".no-products-message");
 const resetFiltersButton = document.querySelector(".reset-filters-button");
 const shopMore = document.querySelector(".shop-more");
@@ -33,7 +44,9 @@ const dialogTitle = document.querySelector(".dialog-title");
 const dialogPrice = document.querySelector(".dialog-price");
 const dialogDescription = document.querySelector(".dialog-description");
 const dialogSizeOptions = document.querySelector(".size-options");
-const dialogColour = document.querySelector(".dialog-colour");
+const dialogColourName = document.querySelector(".dialog-colour-name");
+const colourOptions = document.querySelector(".colour-options");
+const variantStatus = document.querySelector(".variant-status");
 const dialogPolicy = document.querySelector(".dialog-policy");
 const addToBagButton = document.querySelector(".add-to-bag-button");
 const viewBagButton = document.querySelector(".view-bag-button");
@@ -67,8 +80,6 @@ const checkoutFulfilmentLabel = document.querySelector(".checkout-fulfilment-lab
 const checkoutDelivery = document.querySelector(".checkout-delivery");
 const checkoutTotal = document.querySelector(".checkout-total");
 
-const paystackOption = document.querySelector(".paystack-option");
-const testCardNote = document.querySelector(".test-card-note");
 const paymentError = document.querySelector(".payment-error");
 const paymentRadios = document.querySelectorAll('input[name="payment"]');
 const emailOptionalLabel = document.querySelector("#checkout-email-optional");
@@ -101,6 +112,8 @@ let activeFilter = "all";
 let activeSort = "featured";
 let showAll = false;
 let selectedProduct = null;
+let selectedVariant = null;
+let activeQuery = "";
 let selectedFulfilment = document.querySelector('input[name="fulfilment"]:checked').value;
 let addedButtonTimeout = null;
 let isPlacingOrder = false;
@@ -109,7 +122,6 @@ const DIALOG_CLOSE_DELAY = 180;
 const FALLBACK_BEST_SELLER_COUNT = 6;
 
 const PAYMENT_LABELS = {
-  paystack: "Paid online (Paystack)",
   cod: "Pay when you receive",
   transfer: "Bank transfer"
 };
@@ -126,7 +138,7 @@ function formatNaira(amount) {
 }
 
 function getItemKey(bagItem) {
-  return `${bagItem.id}::${bagItem.size}`;
+  return `${bagItem.id}::${bagItem.size}::${bagItem.colour || ""}`;
 }
 
 function getCategoryLabel(categoryId) {
@@ -139,6 +151,137 @@ function getOrderTotals() {
   const deliveryFee = selectedFulfilment === "delivery" ? storeConfig.deliveryFee : 0;
 
   return { subtotal, deliveryFee, total: subtotal + deliveryFee };
+}
+
+// Circle colours for plain colour names, so simple products still get a circle
+const COLOUR_HEX = {
+  black: "#111111",
+  white: "#f5f5f5",
+  grey: "#8a8a8a",
+  gray: "#8a8a8a",
+  green: "#2f6b3f",
+  blue: "#2f5d9e",
+  brown: "#6b4a2f",
+  beige: "#d9c7a3",
+  orange: "#e8792b",
+  silver: "#c0c0c0",
+  red: "#b3261e",
+  navy: "#1f2a44",
+  cream: "#f0e6d2",
+  pink: "#e58fa8",
+  purple: "#6b4aa0",
+  yellow: "#e8c73a",
+  gold: "#c9a24a"
+};
+
+// A product either has a "colours" list (several choices, see products.js) or
+// plain "colour"/"image"/"imageAlt" fields (one fixed colour). Either way this
+// returns a list of at least one variant, with every field filled in.
+function getProductVariants(product) {
+  const source =
+    Array.isArray(product.colours) && product.colours.length > 0
+      ? product.colours
+      : [{ name: product.colour, image: product.image, imageAlt: product.imageAlt }];
+
+  return source.map((colour) => {
+    const unavailableSizes = [
+      ...(product.unavailableSizes || []),
+      ...(colour.unavailableSizes || [])
+    ];
+
+    const hasNoSizeLeft = product.sizes.every((size) => unavailableSizes.includes(size));
+
+    return {
+      name: colour.name,
+      hex: colour.hex || COLOUR_HEX[String(colour.name).trim().toLowerCase()] || null,
+      image: colour.image || product.image,
+      imageAlt: colour.imageAlt || `${colour.name} ${product.name}`,
+      price: Number.isFinite(colour.price) ? colour.price : product.price,
+      unavailableSizes,
+      soldOut: Boolean(colour.soldOut) || hasNoSizeLeft
+    };
+  });
+}
+
+function isSizeAvailable(variant, size) {
+  return !variant.soldOut && !variant.unavailableSizes.includes(size);
+}
+
+// Fades to a new picture once it has loaded, so a swap never flashes empty
+function swapImage(img, src, alt) {
+  if (img.getAttribute("src") === src) {
+    img.alt = alt;
+    return;
+  }
+
+  img.dataset.pending = src;
+  img.classList.add("is-swapping");
+
+  const preload = new Image();
+
+  preload.onload = preload.onerror = () => {
+    if (img.dataset.pending !== src) {
+      return;
+    }
+
+    img.src = src;
+    img.alt = alt;
+    img.classList.remove("is-swapping");
+  };
+
+  preload.src = src;
+}
+
+function getCardPriceText(variant, variants) {
+  const price = formatNaira(variant.price);
+
+  return variants.every((item) => item.soldOut) ? `${price} · Sold out` : price;
+}
+
+function reconcileShoppingBag() {
+  let changed = false;
+
+  for (let index = shoppingBag.length - 1; index >= 0; index -= 1) {
+    const bagItem = shoppingBag[index];
+    const product = products.find((item) => item.id === bagItem.id);
+
+    if (!product) {
+      shoppingBag.splice(index, 1);
+      changed = true;
+      continue;
+    }
+
+    const variants = getProductVariants(product);
+    const variant = variants.find((item) => item.name === bagItem.colour) ||
+      (!bagItem.colour && variants.length === 1 ? variants[0] : null);
+
+    if (
+      !variant ||
+      !product.sizes.includes(bagItem.size) ||
+      !isSizeAvailable(variant, bagItem.size)
+    ) {
+      shoppingBag.splice(index, 1);
+      changed = true;
+      continue;
+    }
+
+    if (
+      bagItem.name !== product.name ||
+      bagItem.price !== variant.price ||
+      bagItem.image !== variant.image ||
+      bagItem.colour !== variant.name
+    ) {
+      bagItem.name = product.name;
+      bagItem.price = variant.price;
+      bagItem.image = variant.image;
+      bagItem.colour = variant.name;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    saveShoppingBag();
+  }
 }
 
 const hasBestSellerFlags = products.some((product) => product.bestSeller);
@@ -240,10 +383,6 @@ function setUpStoreDetails() {
     areaSelect.append(option);
   });
 
-  if (isPaystackAvailable()) {
-    paystackOption.hidden = false;
-  }
-
   setDefaultPayment();
 }
 
@@ -252,6 +391,10 @@ function setUpStoreDetails() {
    ========================================================== */
 
 function createProductCard(product, index) {
+  const variants = getProductVariants(product);
+  let activeVariantIndex = Math.max(0, variants.findIndex((variant) => !variant.soldOut));
+  const defaultVariant = variants[activeVariantIndex];
+
   const card = document.createElement("article");
   const image = document.createElement("img");
   const info = document.createElement("div");
@@ -264,23 +407,15 @@ function createProductCard(product, index) {
   card.className = "product-card reveal";
   card.dataset.productId = product.id;
   card.dataset.category = product.category;
-  card.dataset.price = product.price;
+  card.dataset.price = Math.min(...variants.map((variant) => variant.price));
   card.dataset.order = index;
   card.dataset.bestSeller = String(isBestSeller(product, index));
-  card.dataset.searchText = [
-    product.name,
-    getCategoryLabel(product.category),
-    product.description,
-    product.colour
-  ]
-    .join(" ")
-    .toLowerCase();
 
   // Stagger the scroll-reveal across each row of three
   card.style.setProperty("--reveal-delay", `${(index % 3) * 90}ms`);
 
-  image.src = product.image;
-  image.alt = product.imageAlt || product.name;
+  image.src = defaultVariant.image;
+  image.alt = defaultVariant.imageAlt || product.name;
   image.loading = "lazy";
   image.decoding = "async";
 
@@ -289,7 +424,7 @@ function createProductCard(product, index) {
   category.textContent = getCategoryLabel(product.category);
   title.textContent = product.name;
   price.className = "product-price";
-  price.textContent = formatNaira(product.price);
+  price.textContent = getCardPriceText(defaultVariant, variants);
 
   detailsButton.className = "view-details-button";
   detailsButton.type = "button";
@@ -298,11 +433,59 @@ function createProductCard(product, index) {
   arrow.textContent = "→";
   detailsButton.append(arrow);
 
-  info.append(category, title, price, detailsButton);
+  // Small colour circles under the price (only for products with 2+ colours)
+  let swatchList = null;
+
+  if (variants.length > 1) {
+    swatchList = document.createElement("div");
+    swatchList.className = "card-swatches";
+    swatchList.setAttribute("role", "group");
+    swatchList.setAttribute("aria-label", `${product.name} colours`);
+
+    variants.forEach((variant, variantIndex) => {
+      const swatch = document.createElement("button");
+      const dot = document.createElement("span");
+
+      swatch.className = "card-swatch";
+      swatch.type = "button";
+      swatch.disabled = variant.soldOut;
+      swatch.title = variant.soldOut ? `${variant.name} (sold out)` : variant.name;
+      swatch.setAttribute("aria-label", swatch.title);
+      swatch.setAttribute("aria-pressed", String(variantIndex === activeVariantIndex));
+
+      dot.className = "colour-dot";
+      dot.style.setProperty("--swatch-colour", variant.hex || "#cccccc");
+
+      swatch.append(dot);
+
+      swatch.addEventListener("click", (event) => {
+        event.stopPropagation(); // don't open the product dialog
+
+        activeVariantIndex = variantIndex;
+
+        swatchList.querySelectorAll(".card-swatch").forEach((button, buttonIndex) => {
+          button.setAttribute("aria-pressed", String(buttonIndex === variantIndex));
+        });
+
+        swapImage(image, variant.image, variant.imageAlt);
+        price.textContent = getCardPriceText(variant, variants);
+      });
+
+      swatchList.append(swatch);
+    });
+  }
+
+  info.append(category, title, price);
+
+  if (swatchList) {
+    info.append(swatchList);
+  }
+
+  info.append(detailsButton);
   card.append(image, info);
 
   // Whole card is clickable; the button inside stays for keyboard users
-  card.addEventListener("click", () => openProductDialog(product));
+  card.addEventListener("click", () => openProductDialog(product, activeVariantIndex));
 
   card.addEventListener("animationend", () => {
     card.classList.remove("filter-in");
@@ -375,14 +558,16 @@ function sortProductCards() {
 }
 
 function updateProductVisibility(shouldAnimate = false) {
-  const searchTerm = productSearch.value.trim().toLowerCase();
+  const matchingIds = activeQuery
+    ? new Set(findMatches(activeQuery).map((match) => match.product.id))
+    : null;
   let visibleProductCount = 0;
 
   productCards.forEach((productCard) => {
     const matchesCategory =
       activeFilter === "all" || productCard.dataset.category === activeFilter;
 
-    const matchesSearch = productCard.dataset.searchText.includes(searchTerm);
+    const matchesSearch = !matchingIds || matchingIds.has(productCard.dataset.productId);
 
     // Front page: best sellers only.
     // "Shop all" view: everything, narrowed by search and category.
@@ -402,12 +587,10 @@ function updateProductVisibility(shouldAnimate = false) {
   });
 
   noProductsMessage.hidden = visibleProductCount > 0;
-  resultsCount.hidden = !showAll;
 
-  resultsCount.textContent =
-    visibleProductCount === productCards.length
-      ? `${productCards.length} products`
-      : `Showing ${visibleProductCount} of ${productCards.length} products`;
+  // "Results for ..." line, shown only while a search is applied (no counts)
+  searchSummary.hidden = !(showAll && activeQuery);
+  searchSummaryText.textContent = `Results for “${activeQuery}”`;
 }
 
 // Switches between the front page (best sellers) and the full catalogue
@@ -419,16 +602,16 @@ function setShopView(shouldShowAll, { scroll = true, animate = true } = {}) {
 
   shopEyebrow.textContent = showAll ? "The full collection" : "Best sellers";
   shopTitle.textContent = showAll ? "All items" : "Customer favourites";
-  shopAllButton.textContent = showAll
-    ? "Back to best sellers"
-    : `Shop all ${products.length} items`;
+  shopAllButton.textContent = showAll ? "Back to best sellers" : "Shop all";
 
   // If every product is a best seller there is nothing more to show
   shopMore.hidden = productCards.every((card) => card.dataset.bestSeller === "true");
 
   if (!showAll) {
     // Leave the front page clean: clear any search, filter or sort
-    productSearch.value = "";
+    activeQuery = "";
+    siteSearchInput.value = "";
+    closeSearchPanel();
     setActiveFilter("all");
     productSort.value = "featured";
     activeSort = "featured";
@@ -459,10 +642,6 @@ categoryFilters.addEventListener("click", (event) => {
   updateProductVisibility(true);
 });
 
-productSearch.addEventListener("input", () => {
-  updateProductVisibility();
-});
-
 productSort.addEventListener("change", () => {
   activeSort = productSort.value;
   sortProductCards();
@@ -470,9 +649,248 @@ productSort.addEventListener("change", () => {
 });
 
 resetFiltersButton.addEventListener("click", () => {
-  productSearch.value = "";
+  activeQuery = "";
+  siteSearchInput.value = "";
   setActiveFilter("all");
   updateProductVisibility(true);
+});
+
+searchSummaryClear.addEventListener("click", () => {
+  activeQuery = "";
+  siteSearchInput.value = "";
+  updateProductVisibility(true);
+});
+
+/* ==========================================================
+   Search: one bar in the header, live suggestions in a drop-down
+   ========================================================== */
+
+const MAX_SUGGESTIONS = 6;
+
+// Names, categories and colours only (not descriptions), so "shirt" doesn't
+// match every product that mentions a shirt in its description
+// Extra words people type that aren't in a product's name (per category).
+// A product can add its own with  keywords: ["trainers", "kicks"]  in products.js
+const CATEGORY_SEARCH_WORDS = {
+  apparel: "clothing clothes tops",
+  pants: "trousers bottoms",
+  shoes: "sneakers trainers footwear kicks",
+  caps: "hat hats",
+  jewellery: "jewelry accessories",
+  totes: "bag bags"
+};
+
+const searchIndex = products.map((product) => ({
+  product,
+  name: product.name.toLowerCase(),
+  text: [
+    product.name,
+    getCategoryLabel(product.category),
+    CATEGORY_SEARCH_WORDS[product.category] || "",
+    ...[].concat(product.keywords || []),
+    ...getProductVariants(product).map((variant) => variant.name)
+  ]
+    .join(" ")
+    .toLowerCase()
+}));
+
+// "hoodies" -> "hoodie", "sneakers" -> "sneaker": simple plural handling
+function normaliseSearchTerm(term) {
+  if (term.length > 3 && term.endsWith("ies")) {
+    return term.slice(0, -1);
+  }
+
+  return term.length > 3 && term.endsWith("s") && !term.endsWith("ss")
+    ? term.slice(0, -1)
+    : term;
+}
+
+function findMatches(query) {
+  const terms = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(normaliseSearchTerm);
+
+  if (terms.length === 0) {
+    return [];
+  }
+
+  return searchIndex
+    .map((entry, order) => {
+      if (!terms.every((term) => entry.text.includes(term))) {
+        return null;
+      }
+
+      // Matches in the product name rank above matches elsewhere
+      const score = terms.reduce((total, term) => {
+        return total + (entry.name.startsWith(term) ? 3 : entry.name.includes(term) ? 2 : 1);
+      }, 0);
+
+      return { product: entry.product, score, order };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score || a.order - b.order);
+}
+
+function closeSearchPanel() {
+  searchPanel.hidden = true;
+}
+
+function openSearchPanel() {
+  searchPanel.hidden = false;
+  renderSearchPanel();
+}
+
+// Shows the full catalogue with a search and/or category applied
+function showCatalogue({ query = "", category = "all" } = {}) {
+  closeSearchPanel();
+
+  activeQuery = query.trim();
+  siteSearchInput.value = activeQuery;
+
+  setShopView(true, { scroll: false, animate: false });
+  setActiveFilter(category);
+  updateProductVisibility(true);
+
+  document.querySelector("#shop").scrollIntoView({
+    behavior: prefersReducedMotion.matches ? "auto" : "smooth"
+  });
+}
+
+function renderSearchChips() {
+  productCategories.forEach((category) => {
+    const chip = document.createElement("button");
+
+    chip.className = "search-chip";
+    chip.type = "button";
+    chip.textContent = category.label;
+    chip.addEventListener("click", () => showCatalogue({ category: category.id }));
+
+    searchChips.append(chip);
+  });
+}
+
+function renderSearchPanel() {
+  const query = siteSearchInput.value.trim();
+  const matches = findMatches(query);
+
+  searchResults.replaceChildren();
+  searchQuick.hidden = query !== "";
+  searchViewAll.hidden = matches.length <= MAX_SUGGESTIONS;
+
+  if (query === "") {
+    searchStatus.textContent = "";
+    return;
+  }
+
+  searchStatus.textContent =
+    matches.length === 0 ? `No results for “${query}”. Try a category like shoes or caps.` : "";
+
+  matches.slice(0, MAX_SUGGESTIONS).forEach(({ product }) => {
+    const variants = getProductVariants(product);
+    const result = document.createElement("button");
+    const image = document.createElement("img");
+    const text = document.createElement("span");
+    const name = document.createElement("span");
+    const meta = document.createElement("span");
+    const price = document.createElement("span");
+
+    result.className = "search-result";
+    result.type = "button";
+    image.src = variants[0].image;
+    image.alt = "";
+    name.className = "search-result-name";
+    name.textContent = product.name;
+    meta.className = "search-result-meta";
+    meta.textContent = getCategoryLabel(product.category);
+    price.className = "search-result-price";
+    price.textContent = formatNaira(Math.min(...variants.map((variant) => variant.price)));
+
+    result.addEventListener("click", () => {
+      closeSearchPanel();
+      siteSearchInput.blur();
+      openProductDialog(product);
+    });
+
+    text.append(name, meta);
+    result.append(image, text, price);
+    searchResults.append(result);
+  });
+}
+
+// The panel opens on click / typing (not on focus, so it doesn't pop open
+// again when a product window closes and focus returns to the search box)
+siteSearchInput.addEventListener("click", openSearchPanel);
+siteSearchInput.addEventListener("input", openSearchPanel);
+
+siteSearchForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+
+  const query = siteSearchInput.value.trim();
+
+  if (!query) {
+    openSearchPanel();
+    return;
+  }
+
+  siteSearchInput.blur();
+  showCatalogue({ query });
+});
+
+searchViewAll.addEventListener("click", () => {
+  showCatalogue({ query: siteSearchInput.value });
+});
+
+// Close when clicking elsewhere on the page, or tabbing out of the search
+document.addEventListener("pointerdown", (event) => {
+  if (!searchWrap.contains(event.target)) {
+    closeSearchPanel();
+  }
+});
+
+searchWrap.addEventListener("focusout", (event) => {
+  if (event.relatedTarget && !searchWrap.contains(event.relatedTarget)) {
+    closeSearchPanel();
+  }
+});
+
+// Esc closes the panel; arrow keys move between the box and the suggestions
+searchWrap.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !searchPanel.hidden) {
+    event.preventDefault(); // stops the browser clearing the search box
+    event.stopPropagation();
+    closeSearchPanel();
+    siteSearchInput.focus();
+    return;
+  }
+
+  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+    return;
+  }
+
+  if (searchPanel.hidden) {
+    if (event.key === "ArrowDown") {
+      openSearchPanel();
+    }
+
+    return;
+  }
+
+  const items = [
+    siteSearchInput,
+    ...searchPanel.querySelectorAll("button")
+  ].filter((item) => item.offsetParent !== null);
+  const position = items.indexOf(document.activeElement);
+
+  if (position === -1) {
+    return;
+  }
+
+  event.preventDefault();
+
+  const next = event.key === "ArrowDown" ? position + 1 : position - 1;
+  items[Math.max(0, Math.min(next, items.length - 1))].focus();
 });
 
 /* ==========================================================
@@ -481,42 +899,133 @@ resetFiltersButton.addEventListener("click", () => {
 
 function resetAddToBagButton() {
   clearTimeout(addedButtonTimeout);
-  addToBagButton.textContent = "Add to bag";
+  addToBagButton.textContent = addToBagButton.disabled ? "Sold out" : "Add to bag";
   addToBagButton.classList.remove("is-added");
 }
 
-function openProductDialog(product) {
-  selectedProduct = product;
+function getSelectedSize() {
+  const checkedSize = productDialog.querySelector('input[name="product-size"]:checked');
 
-  dialogImage.src = product.image;
-  dialogImage.alt = product.imageAlt || product.name;
-  dialogCategory.textContent = getCategoryLabel(product.category);
-  dialogTitle.textContent = product.name;
-  dialogPrice.textContent = formatNaira(product.price);
-  dialogDescription.textContent = product.description;
-  dialogColour.textContent = product.colour;
+  return checkedSize ? checkedSize.value : "";
+}
+
+// Sizes that don't exist in the chosen colour are shown but can't be picked
+function renderSizeOptions(product, variant, preferredSize) {
+  const availableSizes = product.sizes.filter((size) => isSizeAvailable(variant, size));
+  const chosenSize = availableSizes.includes(preferredSize) ? preferredSize : availableSizes[0];
 
   dialogSizeOptions.replaceChildren();
 
-  product.sizes.forEach((size, index) => {
+  product.sizes.forEach((size) => {
     const sizeChip = document.createElement("label");
     const sizeInput = document.createElement("input");
     const sizeText = document.createElement("span");
+    const isAvailable = availableSizes.includes(size);
 
-    sizeChip.className = "size-chip";
+    sizeChip.className = "size-chip" + (isAvailable ? "" : " is-unavailable");
+    sizeChip.title = isAvailable ? "" : `Unavailable in ${variant.name}`;
     sizeInput.type = "radio";
     sizeInput.name = "product-size";
     sizeInput.value = size;
-    sizeInput.checked = index === 0;
+    sizeInput.disabled = !isAvailable;
+    sizeInput.checked = size === chosenSize;
     sizeText.textContent = size;
 
     sizeChip.append(sizeInput, sizeText);
     dialogSizeOptions.append(sizeChip);
   });
 
+  return chosenSize || "";
+}
+
+// Selects a colour: picture, name, price, sizes and the button all follow it
+function applyVariant(product, variant, { animate = true } = {}) {
+  const previousSize = getSelectedSize();
+
+  selectedVariant = variant;
+  dialogColourName.textContent = variant.name;
+  dialogPrice.textContent = formatNaira(variant.price);
+
+  if (animate) {
+    swapImage(dialogImage, variant.image, variant.imageAlt);
+  } else {
+    delete dialogImage.dataset.pending;
+    dialogImage.classList.remove("is-swapping");
+    dialogImage.src = variant.image;
+    dialogImage.alt = variant.imageAlt;
+  }
+
+  const chosenSize = renderSizeOptions(product, variant, previousSize);
+
+  addToBagButton.disabled = !chosenSize;
   resetAddToBagButton();
-  bagFeedback.textContent = "";
   viewBagButton.hidden = true;
+  bagFeedback.textContent = "";
+
+  if (!chosenSize) {
+    variantStatus.textContent = `${variant.name} is sold out.`;
+  } else if (previousSize && previousSize !== chosenSize) {
+    variantStatus.textContent =
+      `Size ${previousSize} isn't available in ${variant.name}, so ${chosenSize} is selected.`;
+  } else {
+    variantStatus.textContent = "";
+  }
+}
+
+function renderColourOptions(product, variants, selectedIndex) {
+  // A single colour we can't draw (e.g. "Checkered") just shows its name
+  const showCircles = variants.length > 1 || Boolean(variants[0].hex);
+
+  colourOptions.replaceChildren();
+  colourOptions.hidden = !showCircles;
+
+  if (!showCircles) {
+    return;
+  }
+
+  variants.forEach((variant, index) => {
+    const swatch = document.createElement("label");
+    const input = document.createElement("input");
+    const dot = document.createElement("span");
+    const label = variant.soldOut ? `${variant.name} (sold out)` : variant.name;
+
+    swatch.className = "colour-swatch" + (variant.soldOut ? " is-unavailable" : "");
+    swatch.title = label;
+    input.type = "radio";
+    input.name = "product-colour";
+    input.value = variant.name;
+    input.checked = index === selectedIndex;
+    input.disabled = variant.soldOut && index !== selectedIndex;
+    input.setAttribute("aria-label", label);
+    dot.className = "colour-dot";
+    dot.style.setProperty("--swatch-colour", variant.hex || "#cccccc");
+
+    input.addEventListener("change", () => applyVariant(product, variant));
+
+    swatch.append(input, dot);
+    colourOptions.append(swatch);
+  });
+}
+
+function openProductDialog(product, variantIndex = 0) {
+  selectedProduct = product;
+
+  const variants = getProductVariants(product);
+  let startIndex = variants[variantIndex] && !variants[variantIndex].soldOut
+    ? variantIndex
+    : variants.findIndex((variant) => !variant.soldOut);
+
+  if (startIndex === -1) {
+    startIndex = 0;
+  }
+
+  dialogCategory.textContent = getCategoryLabel(product.category);
+  dialogTitle.textContent = product.name;
+  dialogDescription.textContent = product.description;
+
+  dialogSizeOptions.replaceChildren();
+  renderColourOptions(product, variants, startIndex);
+  applyVariant(product, variants[startIndex], { animate: false });
 
   openDialog(productDialog);
   productDialog.scrollTop = 0;
@@ -537,18 +1046,20 @@ addToBagButton.addEventListener("click", () => {
     return;
   }
 
-  const selectedSize = productDialog.querySelector('input[name="product-size"]:checked');
+  const selectedSize = getSelectedSize();
 
-  if (!selectedSize) {
+  // Only a size that exists in the chosen colour can be added
+  if (!selectedSize || !selectedVariant || !isSizeAvailable(selectedVariant, selectedSize)) {
     return;
   }
 
   const wasAdded = addItemToBag({
     id: selectedProduct.id,
     name: selectedProduct.name,
-    price: selectedProduct.price,
-    size: selectedSize.value,
-    image: selectedProduct.image
+    price: selectedVariant.price,
+    size: selectedSize,
+    colour: selectedVariant.name,
+    image: selectedVariant.image
   });
 
   renderBag();
@@ -585,10 +1096,8 @@ function openBag() {
 }
 
 function updateCheckoutButton() {
-  checkoutButton.disabled = !storeConfig.orderingEnabled;
-  checkoutButton.textContent = storeConfig.orderingEnabled
-    ? "Checkout"
-    : "Online ordering opens soon";
+  checkoutButton.disabled = true;
+  checkoutButton.textContent = "Online ordering opens soon";
 }
 
 function restoreBagFocus(bagItem, action) {
@@ -604,7 +1113,7 @@ function restoreBagFocus(bagItem, action) {
 }
 
 function changeQuantityAndRefocus(bagItem, change, action) {
-  changeBagItemQuantity(bagItem.id, bagItem.size, change);
+  changeBagItemQuantity(bagItem.id, bagItem.size, bagItem.colour, change);
   renderBag();
   restoreBagFocus(bagItem, action);
 }
@@ -638,7 +1147,7 @@ function renderBag() {
     const bagImage = document.createElement("img");
     const bagItemDetails = document.createElement("div");
     const bagItemTitle = document.createElement("h3");
-    const bagItemSize = document.createElement("p");
+    const bagItemMeta = document.createElement("p");
     const quantityControls = document.createElement("div");
     const decreaseButton = document.createElement("button");
     const quantityLabel = document.createElement("span");
@@ -665,7 +1174,9 @@ function renderBag() {
     bagImage.src = bagItem.image;
     bagImage.alt = bagItem.name;
     bagItemTitle.textContent = bagItem.name;
-    bagItemSize.textContent = `Size: ${bagItem.size}`;
+    bagItemMeta.textContent = bagItem.colour
+      ? `Colour: ${bagItem.colour} · Size: ${bagItem.size}`
+      : `Size: ${bagItem.size}`;
     decreaseButton.textContent = "−";
     decreaseButton.setAttribute("aria-label", `Decrease ${bagItem.name} quantity`);
     quantityLabel.textContent = bagItem.quantity;
@@ -685,13 +1196,13 @@ function renderBag() {
     });
 
     removeButton.addEventListener("click", () => {
-      removeBagItem(bagItem.id, bagItem.size);
+      removeBagItem(bagItem.id, bagItem.size, bagItem.colour);
       renderBag();
       restoreBagFocus(bagItem, "remove");
     });
 
     quantityControls.append(decreaseButton, quantityLabel, increaseButton);
-    bagItemDetails.append(bagItemTitle, bagItemSize, quantityControls, removeButton);
+    bagItemDetails.append(bagItemTitle, bagItemMeta, quantityControls, removeButton);
     bagItemElement.append(bagImage, bagItemDetails, bagItemPrice);
     bagItems.append(bagItemElement);
   });
@@ -721,6 +1232,7 @@ fulfilmentOptions.forEach((fulfilmentOption) => {
 window.addEventListener("storage", (event) => {
   if (event.key === BAG_STORAGE_KEY) {
     refreshShoppingBag();
+    reconcileShoppingBag();
     renderBag();
   }
 });
@@ -755,7 +1267,9 @@ function renderOrderLines(container, items) {
     quantityBadge.textContent = item.quantity;
     quantityBadge.setAttribute("aria-hidden", "true");
     name.textContent = item.name;
-    meta.textContent = `Size: ${item.size} · Qty: ${item.quantity}`;
+    meta.textContent = item.colour
+      ? `${item.colour} · Size: ${item.size} · Qty: ${item.quantity}`
+      : `Size: ${item.size} · Qty: ${item.quantity}`;
     price.textContent = formatNaira(item.price * item.quantity);
 
     thumb.append(image, quantityBadge);
@@ -768,8 +1282,7 @@ function renderOrderLines(container, items) {
 function updatePlaceOrderLabel() {
   const total = formatNaira(getOrderTotals().total);
 
-  placeOrderButton.textContent =
-    getSelectedPayment() === "paystack" ? `Pay ${total}` : `Place order · ${total}`;
+  placeOrderButton.textContent = `Place order · ${total}`;
 }
 
 function renderCheckoutSummary() {
@@ -816,13 +1329,7 @@ function getFieldError(input) {
         : "Enter a valid Nigerian phone number, e.g. 0801 234 5678.";
 
     case "email":
-      if (!value) {
-        return getSelectedPayment() === "paystack"
-          ? "Paystack needs your email to take payment online."
-          : "";
-      }
-
-      return EMAIL_PATTERN.test(value) ? "" : "Enter a valid email address.";
+      return !value || EMAIL_PATTERN.test(value) ? "" : "Enter a valid email address.";
 
     case "area":
       return isDelivery && !value ? "Please choose your delivery area." : "";
@@ -892,29 +1399,16 @@ checkoutForm.addEventListener("input", (event) => {
   }
 });
 
-/* ----- Paystack (online payment, test mode) ----- */
-
-function isPaystackAvailable() {
-  return Boolean(storeConfig.paystackPublicKey);
-}
-
 function getSelectedPayment() {
   return checkoutForm.querySelector('input[name="payment"]:checked').value;
 }
 
 function setDefaultPayment() {
-  const defaultPayment = isPaystackAvailable() ? "paystack" : "cod";
-
-  checkoutForm.querySelector(
-    `input[name="payment"][value="${defaultPayment}"]`
-  ).checked = true;
+  checkoutForm.querySelector('input[name="payment"][value="cod"]').checked = true;
 }
 
 function updatePaymentUI() {
-  const isPaystack = getSelectedPayment() === "paystack";
-
-  testCardNote.hidden = !isPaystack;
-  emailOptionalLabel.hidden = isPaystack;
+  emailOptionalLabel.hidden = false;
   paymentError.hidden = true;
 
   // If the email box already shows an error, re-check it for the new method
@@ -932,64 +1426,6 @@ function showPaymentProblem(message) {
   isPlacingOrder = false;
   placeOrderButton.disabled = false;
   updatePlaceOrderLabel();
-}
-
-function payWithPaystack(order) {
-  if (typeof PaystackPop === "undefined") {
-    showPaymentProblem(
-      "The payment window could not load. Check your internet connection and try again."
-    );
-    return;
-  }
-
-  // The browser draws an open dialog above everything else, which would hide
-  // Paystack's window. So the checkout closes while Paystack is open and comes
-  // back afterwards. Everything typed into the form is kept.
-  const resumeCheckout = () => {
-    if (!checkoutDialog.open) {
-      openDialog(checkoutDialog);
-    }
-  };
-
-  checkoutDialog.close();
-
-  try {
-    const popup = new PaystackPop();
-
-    popup.newTransaction({
-      key: storeConfig.paystackPublicKey,
-      email: order.customer.email,
-      amount: order.totals.total * 100, // Paystack expects kobo, not naira
-      currency: storeConfig.currency,
-      metadata: {
-        custom_fields: [
-          { display_name: "Order number", variable_name: "order_number", value: order.number },
-          { display_name: "Customer name", variable_name: "customer_name", value: order.customer.name },
-          { display_name: "Phone", variable_name: "phone", value: order.customer.phone }
-        ]
-      },
-      onSuccess: (transaction) => {
-        order.paymentReference = transaction.reference;
-        resumeCheckout();
-        finishOrder(order);
-      },
-      onCancel: () => {
-        resumeCheckout();
-        showPaymentProblem(
-          "Payment was cancelled and you have not been charged. You can try again when you're ready."
-        );
-      },
-      onError: (error) => {
-        resumeCheckout();
-        showPaymentProblem(
-          `Payment could not start: ${error && error.message ? error.message : "please try again."}`
-        );
-      }
-    });
-  } catch {
-    resumeCheckout();
-    showPaymentProblem("Something went wrong opening the payment window. Please try again.");
-  }
 }
 
 paymentRadios.forEach((paymentRadio) => {
@@ -1028,12 +1464,6 @@ function generateOrderNumber() {
 
 function getNextStepsText(order) {
   const phone = order.customer.phone;
-
-  if (order.payment === "paystack") {
-    return order.fulfilment === "pickup"
-      ? `Your payment was received. We'll call ${phone} to confirm your pickup time.`
-      : `Your payment was received. We'll call ${phone} to confirm your order. Delivery takes ${storeConfig.deliveryTime}.`;
-  }
 
   if (order.payment === "transfer") {
     return `We'll message ${phone} with our bank details. Your order is confirmed once payment is received.`;
@@ -1110,15 +1540,6 @@ function finishOrder(order) {
   successTitle.focus();
 }
 
-checkoutButton.addEventListener("click", () => {
-  if (!storeConfig.orderingEnabled || shoppingBag.length === 0) {
-    return;
-  }
-
-  bagDialog.close();
-  openCheckout();
-});
-
 checkoutBackButton.addEventListener("click", () => {
   checkoutDialog.close();
   openBag();
@@ -1144,31 +1565,7 @@ checkoutDialog.addEventListener("close", () => {
 
 checkoutForm.addEventListener("submit", (event) => {
   event.preventDefault();
-
-  if (isPlacingOrder || shoppingBag.length === 0) {
-    return;
-  }
-
-  if (!validateCheckoutForm()) {
-    return;
-  }
-
-  paymentError.hidden = true;
-  isPlacingOrder = true;
-  placeOrderButton.disabled = true;
-
-  const order = buildOrderFromForm();
-
-  if (order.payment === "paystack") {
-    placeOrderButton.textContent = "Opening payment…";
-    payWithPaystack(order);
-    return;
-  }
-
-  placeOrderButton.textContent = "Placing order…";
-
-  // Small pause so it feels like something is happening
-  setTimeout(() => finishOrder(order), prefersReducedMotion.matches ? 0 : 1100);
+  showPaymentProblem("Online ordering is not available yet.");
 });
 
 /* ==========================================================
@@ -1275,6 +1672,8 @@ function setUpScrollEffects() {
    ========================================================== */
 
 setUpStoreDetails();
+reconcileShoppingBag();
+renderSearchChips();
 renderCategoryFilters();
 renderProducts();
 renderBag();

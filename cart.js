@@ -7,10 +7,13 @@ function isValidBagItem(bagItem) {
   return (
     bagItem &&
     typeof bagItem.id === "string" &&
+    typeof bagItem.name === "string" &&
+    typeof bagItem.image === "string" &&
     typeof bagItem.size === "string" &&
     Number.isFinite(bagItem.price) &&
     Number.isInteger(bagItem.quantity) &&
-    bagItem.quantity > 0
+    bagItem.quantity > 0 &&
+    bagItem.quantity <= MAX_ITEM_QUANTITY
   );
 }
 
@@ -46,11 +49,22 @@ function saveShoppingBag() {
   }
 }
 
+// Two bag lines are "the same" only if they share an id, a size AND a colour.
+// Products with no colour choice pass an empty colour, which still matches
+// correctly since both sides fall back to "".
+function isSameBagItem(bagItem, id, size, colour) {
+  return (
+    bagItem.id === id &&
+    bagItem.size === size &&
+    (bagItem.colour || "") === (colour || "")
+  );
+}
+
 // Returns true if the item was added, false if the quantity limit was hit
 function addItemToBag(product) {
-  const matchingItem = shoppingBag.find((bagItem) => {
-    return bagItem.id === product.id && bagItem.size === product.size;
-  });
+  const matchingItem = shoppingBag.find((bagItem) =>
+    isSameBagItem(bagItem, product.id, product.size, product.colour)
+  );
 
   if (matchingItem) {
     if (matchingItem.quantity >= MAX_ITEM_QUANTITY) {
@@ -71,10 +85,10 @@ function addItemToBag(product) {
   return true;
 }
 
-function changeBagItemQuantity(productId, productSize, quantityChange) {
-  const matchingItem = shoppingBag.find((bagItem) => {
-    return bagItem.id === productId && bagItem.size === productSize;
-  });
+function changeBagItemQuantity(productId, productSize, productColour, quantityChange) {
+  const matchingItem = shoppingBag.find((bagItem) =>
+    isSameBagItem(bagItem, productId, productSize, productColour)
+  );
 
   if (!matchingItem) {
     return;
@@ -86,17 +100,17 @@ function changeBagItemQuantity(productId, productSize, quantityChange) {
   );
 
   if (matchingItem.quantity <= 0) {
-    removeBagItem(productId, productSize);
+    removeBagItem(productId, productSize, productColour);
     return;
   }
 
   saveShoppingBag();
 }
 
-function removeBagItem(productId, productSize) {
-  const itemIndex = shoppingBag.findIndex((bagItem) => {
-    return bagItem.id === productId && bagItem.size === productSize;
-  });
+function removeBagItem(productId, productSize, productColour) {
+  const itemIndex = shoppingBag.findIndex((bagItem) =>
+    isSameBagItem(bagItem, productId, productSize, productColour)
+  );
 
   if (itemIndex === -1) {
     return;

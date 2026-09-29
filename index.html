@@ -21,7 +21,7 @@
     href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   >
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 
 <body>
@@ -32,39 +32,73 @@
   </div>
 
   <header class="site-header">
-    <a class="brand-logo" href="#top">APEX ATTIRE</a>
+    <div class="header-top">
+      <a class="brand-logo" href="#top">APEX ATTIRE</a>
 
-    <nav class="main-nav" id="main-navigation" aria-label="Main navigation">
-      <a href="#shop">Shop</a>
-      <a href="#delivery">Delivery</a>
-      <a href="#about">About</a>
-      <a href="#contact">Contact</a>
-    </nav>
+      <nav class="main-nav" id="main-navigation" aria-label="Main navigation">
+        <a href="#shop">Shop</a>
+        <a href="#delivery">Delivery</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </nav>
 
-    <div class="header-controls">
-      <button class="bag-toggle" type="button" aria-label="Open shopping bag">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M6 8H18L17 20H7L6 8ZM9 8V6A3 3 0 0 1 15 6V8"></path>
-        </svg>
-        <span>Bag</span>
-        <span class="bag-count" data-count="0">0</span>
-      </button>
+      <div class="header-search-wrap">
+        <form class="header-search" role="search">
+          <label class="visually-hidden" for="site-search-input">Search the collection</label>
+          <input
+            class="site-search-input"
+            id="site-search-input"
+            type="search"
+            placeholder="Search tees, sneakers, chains…"
+            autocomplete="off"
+            enterkeyhint="search"
+            aria-controls="search-panel"
+          >
+          <button class="site-search-button" type="submit" aria-label="Search">
+            <svg class="site-search-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="M20 20L16.5 16.5"></path>
+            </svg>
+          </button>
+        </form>
 
-      <button
-        class="menu-toggle"
-        type="button"
-        aria-label="Open navigation"
-        aria-expanded="false"
-        aria-controls="main-navigation"
-      >
-        <svg class="menu-icon menu-icon-open" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 7H20M4 12H20M4 17H20"></path>
-        </svg>
+        <div class="search-panel" id="search-panel" role="region" aria-label="Search suggestions" hidden>
+          <div class="search-quick">
+            <p class="search-hint">Browse by category</p>
+            <div class="search-chips"></div>
+          </div>
 
-        <svg class="menu-icon menu-icon-close" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M6 6L18 18M18 6L6 18"></path>
-        </svg>
-      </button>
+          <p class="search-status" role="status" aria-live="polite"></p>
+          <div class="search-results"></div>
+          <button class="search-viewall" type="button" hidden>See all results →</button>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <button class="bag-toggle" type="button" aria-label="Open shopping bag">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 8H18L17 20H7L6 8ZM9 8V6A3 3 0 0 1 15 6V8"></path>
+          </svg>
+          <span>Bag</span>
+          <span class="bag-count" data-count="0">0</span>
+        </button>
+
+        <button
+          class="menu-toggle"
+          type="button"
+          aria-label="Open navigation"
+          aria-expanded="false"
+          aria-controls="main-navigation"
+        >
+          <svg class="menu-icon menu-icon-open" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7H20M4 12H20M4 17H20"></path>
+          </svg>
+
+          <svg class="menu-icon menu-icon-close" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6L18 18M18 6L6 18"></path>
+          </svg>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -82,44 +116,13 @@
       </div>
     </section>
 
-    <div class="marquee" aria-hidden="true">
-      <div class="marquee-track">
-        <div class="marquee-group">
-          <span>Lagos Streetwear</span>
-          <span>Everyday Uniform</span>
-          <span>Clean Staples</span>
-          <span>Considered Accessories</span>
-        </div>
-        <div class="marquee-group">
-          <span>Lagos Streetwear</span>
-          <span>Everyday Uniform</span>
-          <span>Clean Staples</span>
-          <span>Considered Accessories</span>
-        </div>
-      </div>
-    </div>
-
-        <section class="shop-section" id="shop">
+    <section class="shop-section" id="shop">
       <div class="section-heading reveal">
         <p class="eyebrow shop-eyebrow">Best sellers</p>
         <h2 class="shop-title">Customer favourites</h2>
       </div>
 
       <div class="catalogue-toolbar" hidden>
-        <div class="catalogue-search">
-          <label class="visually-hidden" for="product-search">
-            Search the collection
-          </label>
-
-          <input
-            class="search-input"
-            id="product-search"
-            type="search"
-            placeholder="Search the collection"
-            autocomplete="off"
-          >
-        </div>
-
         <div class="catalogue-sort">
           <label for="product-sort">Sort by</label>
           <select class="sort-select" id="product-sort">
@@ -133,7 +136,10 @@
       <!-- Filter buttons are created from products.js -->
       <div class="category-filters" role="group" aria-label="Product categories" hidden></div>
 
-      <p class="results-count" role="status" aria-live="polite" hidden></p>
+      <p class="search-summary" hidden>
+        <span class="search-summary-text"></span>
+        <button class="search-summary-clear" type="button">Clear search</button>
+      </p>
 
       <!-- Product cards are created from products.js -->
       <div class="product-grid"></div>
@@ -242,15 +248,17 @@
       <p class="dialog-description"></p>
 
       <div class="product-meta">
+        <div class="colour-group" role="group" aria-labelledby="colour-label">
+          <span class="colour-label" id="colour-label">Colour: <strong class="dialog-colour-name"></strong></span>
+          <div class="colour-options"></div>
+        </div>
+
         <div class="size-group" role="group" aria-labelledby="size-label">
           <span class="size-label" id="size-label">Size</span>
           <div class="size-options"></div>
         </div>
 
-        <div class="product-meta-row">
-          <span>Colour</span>
-          <strong class="dialog-colour"></strong>
-        </div>
+        <p class="variant-status" role="status" aria-live="polite"></p>
       </div>
 
       <button class="add-to-bag-button" type="button">Add to bag</button>
@@ -307,7 +315,8 @@
           <strong class="bag-total-price">₦0</strong>
         </p>
 
-        <button class="checkout-button" type="button">Checkout</button>
+        <button class="checkout-button" type="button" disabled>Online ordering opens soon</button>
+        <p class="bag-save-note">Your bag is saved in this browser. Checkout is not open yet.</p>
       </div>
     </div>
   </dialog>
@@ -373,14 +382,6 @@
           <fieldset class="payment-options">
             <legend>Payment method</legend>
 
-            <label class="paystack-option" hidden>
-              <input type="radio" name="payment" value="paystack">
-              <span>
-                Pay online now
-                <small>Card, bank transfer or USSD via Paystack</small>
-              </span>
-            </label>
-
             <label>
               <input type="radio" name="payment" value="cod" checked>
               <span>Pay when you receive</span>
@@ -391,11 +392,6 @@
               <span>Bank transfer</span>
             </label>
           </fieldset>
-
-          <p class="test-card-note" hidden>
-            <strong>Test mode.</strong> Use card <code>4084 0840 8408 4081</code>,
-            any future expiry date and CVV <code>408</code>. No real money is charged.
-          </p>
 
           <p class="payment-error" role="alert" hidden></p>
 
@@ -487,7 +483,6 @@
     </div>
   </footer>
 
-  <script src="https://js.paystack.co/v2/inline.js"></script>
   <script src="store-config.js"></script>
   <script src="products.js"></script>
   <script src="cart.js"></script>
