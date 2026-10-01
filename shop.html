@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>APEX ATTIRE | Streetwear</title>
-  <meta name="description" content="Streetwear for Lagos days with more than one plan. Shop APEX ATTIRE pieces, selected labels, shoes and accessories.">
+  <title>Shop | APEX ATTIRE</title>
+  <meta name="description" content="Browse the full APEX ATTIRE mix: our own streetwear pieces, selected labels, shoes and accessories in Lagos, Nigeria.">
   <meta name="theme-color" content="#0b0b0b">
 
-  <meta property="og:title" content="APEX ATTIRE | Streetwear">
-  <meta property="og:description" content="APEX pieces and selected labels for every stop the day takes.">
+  <meta property="og:title" content="Shop | APEX ATTIRE">
+  <meta property="og:description" content="Our label, selected finds and the details that finish your fit.">
   <meta property="og:type" content="website">
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230b0b0b'/%3E%3Ctext x='50' y='70' font-size='62' font-weight='700' text-anchor='middle' fill='%23f5f3ee' font-family='Arial'%3EA%3C/text%3E%3C/svg%3E">
@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="style.css?v=17">
 </head>
 
-<body id="top" data-page="home">
+<body id="top" data-page="shop">
   <a class="skip-link" href="#shop">Skip to products</a>
 
   <div class="announcement-bar" hidden>
@@ -33,13 +33,13 @@
 
   <header class="site-header">
     <div class="header-top">
-      <a class="brand-logo" href="#top">APEX ATTIRE</a>
+      <a class="brand-logo" href="index.html">APEX ATTIRE</a>
 
       <nav class="main-nav" id="main-navigation" aria-label="Main navigation">
         <a href="index.html">Home</a>
-        <a href="shop.html">Shop</a>
-        <a href="#delivery">Delivery</a>
-        <a href="#about">About</a>
+        <a href="#shop">Shop</a>
+        <a href="index.html#delivery">Delivery</a>
+        <a href="index.html#about">About</a>
         <button class="mobile-account-toggle" type="button" disabled aria-label="Account coming soon">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="8" r="3.5"></circle>
@@ -111,61 +111,11 @@
     </div>
   </header>
 
-  <main>
-    <section class="hero">
-      <p class="eyebrow">APEX ATTIRE / LAGOS</p>
-      <h1>One fit. Every Lagos plan.</h1>
-      <p class="intro-text">
-        Start with a solid fit. Make it yours with pieces from our own label and
-        a selection of brands we rate.
-      </p>
-
-      <div class="hero-actions">
-        <a class="button button-primary" href="shop.html">Explore the collection</a>
-        <a class="button button-secondary" href="#delivery">How delivery works</a>
-      </div>
-    </section>
-
-    <section class="category-section" aria-labelledby="category-title">
-      <div class="section-heading reveal">
-        <p class="eyebrow">Start with the fit</p>
-        <h2 id="category-title">Build it from the clothes up.</h2>
-      </div>
-      <div class="category-tiles">
-        <button class="category-tile" type="button" data-shop-category="apparel"><img src="images/tee shirt.jpg" alt="Streetwear tops" loading="lazy"><span>Tops</span></button>
-        <button class="category-tile" type="button" data-shop-category="pants"><img src="images/black wide-leg jeans.jpg" alt="Streetwear trousers" loading="lazy"><span>Trousers</span></button>
-        <button class="category-tile" type="button" data-shop-category="shorts"><img src="images/Relaxed cotton shorts.jpg" alt="Black relaxed cotton shorts" loading="lazy"><span>Shorts</span></button>
-        <button class="category-tile" type="button" data-shop-category="apparel" data-shop-query="hoodie"><img src="images/grey hoodie.jpg" alt="Streetwear hoodie" loading="lazy"><span>Hoodies</span></button>
-        <button class="category-tile" type="button" data-shop-category="apparel" data-shop-query="jacket"><img src="images/Jean jacket with fur.jpg" alt="Streetwear jacket" loading="lazy"><span>Jackets</span></button>
-        <button class="category-tile" type="button" data-shop-category="pants" data-shop-query="joggers"><img src="images/black-joggers.jpg" alt="Streetwear joggers" loading="lazy"><span>Joggers</span></button>
-      </div>
-    </section>
-
-    <section class="category-section category-section-secondary" aria-labelledby="accessories-title">
-      <div class="section-heading reveal">
-        <p class="eyebrow">The final details</p>
-        <h2 id="accessories-title">Finish the fit.</h2>
-      </div>
-      <div class="category-tiles">
-        <button class="category-tile" type="button" data-shop-category="shoes"><img src="images/white sneakers.jpg" alt="Streetwear shoes" loading="lazy"><span>Shoes</span></button>
-        <button class="category-tile" type="button" data-shop-category="caps"><img src="images/NY beige cap.jpg" alt="Streetwear caps" loading="lazy"><span>Caps</span></button>
-        <button class="category-tile" type="button" data-shop-category="jewellery"><img src="images/rings.jpg" alt="Streetwear jewellery" loading="lazy"><span>Jewellery</span></button>
-        <button class="category-tile" type="button" data-shop-category="totes"><img src="images/black tote bag.jpg" alt="Streetwear tote bag" loading="lazy"><span>Tote bags</span></button>
-      </div>
-    </section>
-
-    <section class="arrivals-section" aria-labelledby="arrivals-title">
-      <div class="arrivals-heading reveal">
-        <div><p class="eyebrow">Fresh in at APEX</p><h2 id="arrivals-title">New arrivals</h2></div>
-        <button class="arrivals-view-all" type="button">View all <span aria-hidden="true">→</span></button>
-      </div>
-      <div class="arrivals-grid"></div>
-    </section>
-
+  <main class="shop-page-main">
     <section class="shop-section" id="shop">
       <div class="section-heading reveal">
-        <p class="eyebrow shop-eyebrow">Bestsellers</p>
-        <h2 class="shop-title">The pieces you keep picking.</h2>
+        <p class="eyebrow shop-eyebrow">The full APEX mix</p>
+        <h2 class="shop-title">Everything in rotation.</h2>
       </div>
 
       <div class="catalogue-toolbar" hidden>
@@ -201,79 +151,6 @@
 
       <div class="shop-more" hidden>
         <button class="button button-primary shop-all-button" type="button">Shop all items</button>
-      </div>
-    </section>
-
-    <section class="service-section" id="delivery">
-      <div class="reveal">
-        <p class="eyebrow">Before you order</p>
-        <h2>From Lagos to your doorstep.</h2>
-      </div>
-
-      <div class="service-grid">
-        <article class="service-card reveal">
-          <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3 6H14V16H3ZM14 9H18L21 12V16H14"></path>
-            <circle cx="7" cy="18" r="1.6"></circle>
-            <circle cx="17" cy="18" r="1.6"></circle>
-          </svg>
-          <h3>Nationwide Delivery</h3>
-          <p>We deliver across Nigeria. Lagos delivery is ₦2,500; elsewhere, the courier fee depends on your state, city and parcel. We’ll confirm the exact fee before payment.</p>
-        </article>
-
-        <article class="service-card reveal">
-          <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="9"></circle>
-            <path d="M12 7V12L15 14"></path>
-          </svg>
-          <h3>Delivery Time</h3>
-          <p>Expect 1–3 business days in Lagos and 3–5 business days outside Lagos after confirmation.</p>
-        </article>
-
-        <article class="service-card reveal">
-          <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 9H19L18 20H6L5 9ZM9 9V7A3 3 0 0 1 15 7V9"></path>
-          </svg>
-          <h3>Pickup</h3>
-          <p>Prefer to collect? Pickup is available once your order is confirmed.</p>
-        </article>
-
-        <article class="service-card reveal">
-          <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 8H18L15 5M20 16H6L9 19"></path>
-          </svg>
-          <h3>Questions?</h3>
-          <p>Check sizes and details before ordering. Need help? Get in touch before you confirm.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="about-section" id="about">
-      <div class="about-layout">
-        <div class="about-text reveal">
-          <p class="eyebrow">The APEX mix</p>
-          <h2>Our label. Good finds. Your fit.</h2>
-          <p>
-            APEX ATTIRE brings our own pieces together with selected finds from
-            other labels. Based in Lagos, we’re here for the days that change
-            plans—and the clothes you reach for anyway.
-          </p>
-        </div>
-
-        <ul class="about-pillars reveal">
-          <li>
-            <strong>Clothes first</strong>
-            <span>Tops, layers and trousers to build the fit around.</span>
-          </li>
-          <li>
-            <strong>Labels we rate</strong>
-            <span>APEX pieces sit alongside styles we’ve chosen from other brands.</span>
-          </li>
-          <li>
-            <strong>The last detail</strong>
-            <span>Shoes, caps, jewellery and totes when the outfit needs one more move.</span>
-          </li>
-        </ul>
       </div>
     </section>
   </main>
@@ -513,15 +390,15 @@
   <footer class="site-footer" id="contact">
     <div class="footer-grid">
       <div class="footer-brand">
-        <a class="brand-logo" href="#top">APEX ATTIRE</a>
+        <a class="brand-logo" href="index.html">APEX ATTIRE</a>
         <p>Our label and selected finds for the way Lagos gets dressed.</p>
       </div>
 
       <div class="footer-column">
         <h3>Explore</h3>
-        <a href="shop.html">Shop</a>
-        <a href="#delivery">Delivery</a>
-        <a href="#about">About</a>
+        <a href="#shop">Shop</a>
+        <a href="index.html#delivery">Delivery</a>
+        <a href="index.html#about">About</a>
       </div>
 
       <div class="footer-column footer-contact">

@@ -3,6 +3,7 @@
    ========================================================== */
 
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const pageIsShop = document.body.dataset.page === "shop";
 
 const siteHeader = document.querySelector(".site-header");
 const announcementBar = document.querySelector(".announcement-bar");
@@ -14,10 +15,9 @@ const navigationLinks = document.querySelectorAll(".main-nav a");
 
 const siteSearchForm = document.querySelector(".header-search");
 const siteSearchInput = document.querySelector("#site-search-input");
+const siteSearchButton = document.querySelector(".site-search-button");
 const searchWrap = document.querySelector(".header-search-wrap");
 const searchPanel = document.querySelector(".search-panel");
-const searchQuick = document.querySelector(".search-quick");
-const searchChips = document.querySelector(".search-chips");
 const searchStatus = document.querySelector(".search-status");
 const searchResults = document.querySelector(".search-results");
 const searchViewAll = document.querySelector(".search-viewall");
@@ -30,6 +30,7 @@ const shopTitle = document.querySelector(".shop-title");
 const catalogueToolbar = document.querySelector(".catalogue-toolbar");
 const categoryFilters = document.querySelector(".category-filters");
 const productGrid = document.querySelector(".product-grid");
+const arrivalsGrid = document.querySelector(".arrivals-grid");
 const productSort = document.querySelector("#product-sort");
 const noProductsMessage = document.querySelector(".no-products-message");
 const resetFiltersButton = document.querySelector(".reset-filters-button");
@@ -148,9 +149,15 @@ function getCategoryLabel(categoryId) {
 
 function getOrderTotals() {
   const subtotal = getBagSubtotal();
-  const deliveryFee = selectedFulfilment === "delivery" ? storeConfig.deliveryFee : 0;
+  const deliveryFee = selectedFulfilment === "pickup"
+    ? 0
+    : areaSelect.value === "Lagos" ? storeConfig.lagosDeliveryFee : null;
 
-  return { subtotal, deliveryFee, total: subtotal + deliveryFee };
+  return { subtotal, deliveryFee, total: deliveryFee === null ? null : subtotal + deliveryFee };
+}
+
+function formatOrderTotal(totals) {
+  return totals.total === null ? `${formatNaira(totals.subtotal)} + delivery` : formatNaira(totals.total);
 }
 
 // Circle colours for plain colour names, so simple products still get a circle
@@ -350,8 +357,8 @@ function setUpStoreDetails() {
   }
 
   dialogPolicy.textContent =
-    `${formatNaira(storeConfig.deliveryFee)} flat delivery within Lagos State · ` +
-    `Exchanges within ${storeConfig.exchangeWindowDays} days of delivery.`;
+    `Nationwide delivery · Lagos ${formatNaira(storeConfig.lagosDeliveryFee)} · ` +
+    "Other locations quoted after state, city and parcel details are confirmed.";
 
   footerYear.textContent = new Date().getFullYear();
 
@@ -367,7 +374,17 @@ function setUpStoreDetails() {
   }
 
   if (storeConfig.whatsappNumber) {
-    addFooterLink("WhatsApp", `https://wa.me/${storeConfig.whatsappNumber}`);
+    const whatsappLink = document.createElement("a");
+    const icon = document.createElement("img");
+
+    whatsappLink.href = `https://wa.me/${storeConfig.whatsappNumber}`;
+    whatsappLink.target = "_blank";
+    whatsappLink.rel = "noopener noreferrer";
+    whatsappLink.className = "footer-whatsapp-link";
+    icon.src = "whatsapp.svg";
+    icon.alt = "";
+    whatsappLink.append(icon, document.createTextNode("WhatsApp"));
+    footerContact.append(whatsappLink);
   }
 
   if (storeConfig.instagramHandle) {
@@ -375,7 +392,7 @@ function setUpStoreDetails() {
     addFooterLink("Instagram", `https://instagram.com/${handle}`);
   }
 
-  (storeConfig.deliveryAreas || []).forEach((area) => {
+  (storeConfig.deliveryStates || []).forEach((area) => {
     const option = document.createElement("option");
 
     option.value = area;
@@ -405,6 +422,7 @@ function createProductCard(product, index) {
   const arrow = document.createElement("span");
 
   card.className = "product-card reveal";
+  if (product.placeholder) card.classList.add("is-placeholder");
   card.dataset.productId = product.id;
   card.dataset.category = product.category;
   card.dataset.price = Math.min(...variants.map((variant) => variant.price));
@@ -425,6 +443,7 @@ function createProductCard(product, index) {
   title.textContent = product.name;
   price.className = "product-price";
   price.textContent = getCardPriceText(defaultVariant, variants);
+  if (product.placeholder) category.append(" · Preview");
 
   detailsButton.className = "view-details-button";
   detailsButton.type = "button";
@@ -433,53 +452,7 @@ function createProductCard(product, index) {
   arrow.textContent = "→";
   detailsButton.append(arrow);
 
-  // Small colour circles under the price (only for products with 2+ colours)
-  let swatchList = null;
-
-  if (variants.length > 1) {
-    swatchList = document.createElement("div");
-    swatchList.className = "card-swatches";
-    swatchList.setAttribute("role", "group");
-    swatchList.setAttribute("aria-label", `${product.name} colours`);
-
-    variants.forEach((variant, variantIndex) => {
-      const swatch = document.createElement("button");
-      const dot = document.createElement("span");
-
-      swatch.className = "card-swatch";
-      swatch.type = "button";
-      swatch.disabled = variant.soldOut;
-      swatch.title = variant.soldOut ? `${variant.name} (sold out)` : variant.name;
-      swatch.setAttribute("aria-label", swatch.title);
-      swatch.setAttribute("aria-pressed", String(variantIndex === activeVariantIndex));
-
-      dot.className = "colour-dot";
-      dot.style.setProperty("--swatch-colour", variant.hex || "#cccccc");
-
-      swatch.append(dot);
-
-      swatch.addEventListener("click", (event) => {
-        event.stopPropagation(); // don't open the product dialog
-
-        activeVariantIndex = variantIndex;
-
-        swatchList.querySelectorAll(".card-swatch").forEach((button, buttonIndex) => {
-          button.setAttribute("aria-pressed", String(buttonIndex === variantIndex));
-        });
-
-        swapImage(image, variant.image, variant.imageAlt);
-        price.textContent = getCardPriceText(variant, variants);
-      });
-
-      swatchList.append(swatch);
-    });
-  }
-
   info.append(category, title, price);
-
-  if (swatchList) {
-    info.append(swatchList);
-  }
 
   info.append(detailsButton);
   card.append(image, info);
@@ -499,6 +472,13 @@ function renderProducts() {
 
   productCards = products.map((product, index) => createProductCard(product, index));
   productGrid.append(...productCards);
+}
+
+function renderNewArrivals() {
+  if (!arrivalsGrid) return;
+
+  const newest = products.filter((product) => product.newArrival).slice(0, 8);
+  arrivalsGrid.replaceChildren(...newest.map((product, index) => createProductCard(product, index)));
 }
 
 function renderCategoryFilters() {
@@ -564,8 +544,9 @@ function updateProductVisibility(shouldAnimate = false) {
   let visibleProductCount = 0;
 
   productCards.forEach((productCard) => {
-    const matchesCategory =
-      activeFilter === "all" || productCard.dataset.category === activeFilter;
+    const matchesCategory = activeFilter === "all"
+      || productCard.dataset.category === activeFilter
+      || (activeFilter === "accessories" && ["caps", "jewellery", "totes"].includes(productCard.dataset.category));
 
     const matchesSearch = !matchingIds || matchingIds.has(productCard.dataset.productId);
 
@@ -600,12 +581,12 @@ function setShopView(shouldShowAll, { scroll = true, animate = true } = {}) {
   catalogueToolbar.hidden = !showAll;
   categoryFilters.hidden = !showAll;
 
-  shopEyebrow.textContent = showAll ? "The full collection" : "Best sellers";
-  shopTitle.textContent = showAll ? "All items" : "Customer favourites";
-  shopAllButton.textContent = showAll ? "Back to best sellers" : "Shop all";
+  shopEyebrow.textContent = showAll ? "The full APEX mix" : "Bestsellers";
+  shopTitle.textContent = showAll ? "Everything in rotation." : "The pieces you keep picking.";
+  shopAllButton.textContent = "See the full collection";
 
   // If every product is a best seller there is nothing more to show
-  shopMore.hidden = productCards.every((card) => card.dataset.bestSeller === "true");
+  shopMore.hidden = pageIsShop || productCards.every((card) => card.dataset.bestSeller === "true");
 
   if (!showAll) {
     // Leave the front page clean: clear any search, filter or sort
@@ -628,8 +609,17 @@ function setShopView(shouldShowAll, { scroll = true, animate = true } = {}) {
 }
 
 shopAllButton.addEventListener("click", () => {
-  setShopView(!showAll);
+  window.location.href = "shop.html";
 });
+
+document.querySelectorAll("[data-shop-category]").forEach((tile) => {
+  tile.addEventListener("click", () => showCatalogue({
+    category: tile.dataset.shopCategory,
+    query: tile.dataset.shopQuery || ""
+  }));
+});
+
+document.querySelector(".arrivals-view-all")?.addEventListener("click", () => showCatalogue());
 
 categoryFilters.addEventListener("click", (event) => {
   const button = event.target.closest(".filter-button");
@@ -674,6 +664,7 @@ const MAX_SUGGESTIONS = 6;
 const CATEGORY_SEARCH_WORDS = {
   apparel: "clothing clothes tops",
   pants: "trousers bottoms",
+  shorts: "shorts bottoms summer",
   shoes: "sneakers trainers footwear kicks",
   caps: "hat hats",
   jewellery: "jewelry accessories",
@@ -742,9 +733,29 @@ function openSearchPanel() {
   renderSearchPanel();
 }
 
+function setSearchExpanded(expanded) {
+  searchWrap.classList.toggle("is-expanded", expanded);
+  siteSearchButton.setAttribute("aria-expanded", String(expanded));
+  siteSearchButton.setAttribute("aria-label", expanded ? "Search products" : "Open search");
+  if (expanded) {
+    siteSearchInput.focus();
+  } else {
+    closeSearchPanel();
+  }
+}
+
 // Shows the full catalogue with a search and/or category applied
 function showCatalogue({ query = "", category = "all" } = {}) {
-  closeSearchPanel();
+  if (!pageIsShop) {
+    const parameters = new URLSearchParams();
+    if (query.trim()) parameters.set("q", query.trim());
+    if (category !== "all") parameters.set("category", category);
+    const queryString = parameters.toString();
+    window.location.href = `shop.html${queryString ? `?${queryString}` : ""}`;
+    return;
+  }
+
+  setSearchExpanded(false);
 
   activeQuery = query.trim();
   siteSearchInput.value = activeQuery;
@@ -758,25 +769,11 @@ function showCatalogue({ query = "", category = "all" } = {}) {
   });
 }
 
-function renderSearchChips() {
-  productCategories.forEach((category) => {
-    const chip = document.createElement("button");
-
-    chip.className = "search-chip";
-    chip.type = "button";
-    chip.textContent = category.label;
-    chip.addEventListener("click", () => showCatalogue({ category: category.id }));
-
-    searchChips.append(chip);
-  });
-}
-
 function renderSearchPanel() {
   const query = siteSearchInput.value.trim();
   const matches = findMatches(query);
 
   searchResults.replaceChildren();
-  searchQuick.hidden = query !== "";
   searchViewAll.hidden = matches.length <= MAX_SUGGESTIONS;
 
   if (query === "") {
@@ -785,7 +782,7 @@ function renderSearchPanel() {
   }
 
   searchStatus.textContent =
-    matches.length === 0 ? `No results for “${query}”. Try a category like shoes or caps.` : "";
+    matches.length === 0 ? `Nothing for “${query}” yet. Try tops, trousers or shoes.` : "";
 
   matches.slice(0, MAX_SUGGESTIONS).forEach(({ product }) => {
     const variants = getProductVariants(product);
@@ -821,7 +818,15 @@ function renderSearchPanel() {
 
 // The panel opens on click / typing (not on focus, so it doesn't pop open
 // again when a product window closes and focus returns to the search box)
-siteSearchInput.addEventListener("click", openSearchPanel);
+siteSearchButton.addEventListener("click", (event) => {
+  if (!searchWrap.classList.contains("is-expanded")) {
+    event.preventDefault();
+    setSearchExpanded(true);
+  }
+});
+siteSearchInput.addEventListener("click", () => {
+  if (siteSearchInput.value.trim()) openSearchPanel();
+});
 siteSearchInput.addEventListener("input", openSearchPanel);
 
 siteSearchForm.addEventListener("submit", (event) => {
@@ -830,7 +835,7 @@ siteSearchForm.addEventListener("submit", (event) => {
   const query = siteSearchInput.value.trim();
 
   if (!query) {
-    openSearchPanel();
+    siteSearchInput.focus();
     return;
   }
 
@@ -845,23 +850,23 @@ searchViewAll.addEventListener("click", () => {
 // Close when clicking elsewhere on the page, or tabbing out of the search
 document.addEventListener("pointerdown", (event) => {
   if (!searchWrap.contains(event.target)) {
-    closeSearchPanel();
+    setSearchExpanded(false);
   }
 });
 
 searchWrap.addEventListener("focusout", (event) => {
   if (event.relatedTarget && !searchWrap.contains(event.relatedTarget)) {
-    closeSearchPanel();
+    setSearchExpanded(false);
   }
 });
 
 // Esc closes the panel; arrow keys move between the box and the suggestions
 searchWrap.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && !searchPanel.hidden) {
+  if (event.key === "Escape" && searchWrap.classList.contains("is-expanded")) {
     event.preventDefault(); // stops the browser clearing the search box
     event.stopPropagation();
-    closeSearchPanel();
-    siteSearchInput.focus();
+    setSearchExpanded(false);
+    siteSearchButton.focus();
     return;
   }
 
@@ -899,7 +904,9 @@ searchWrap.addEventListener("keydown", (event) => {
 
 function resetAddToBagButton() {
   clearTimeout(addedButtonTimeout);
-  addToBagButton.textContent = addToBagButton.disabled ? "Sold out" : "Add to bag";
+  addToBagButton.textContent = selectedProduct?.placeholder
+    ? "Details being updated"
+    : addToBagButton.disabled ? "Sold out" : "Add to bag";
   addToBagButton.classList.remove("is-added");
 }
 
@@ -957,12 +964,14 @@ function applyVariant(product, variant, { animate = true } = {}) {
 
   const chosenSize = renderSizeOptions(product, variant, previousSize);
 
-  addToBagButton.disabled = !chosenSize;
+  addToBagButton.disabled = !chosenSize || product.placeholder;
   resetAddToBagButton();
   viewBagButton.hidden = true;
   bagFeedback.textContent = "";
 
-  if (!chosenSize) {
+  if (product.placeholder) {
+    variantStatus.textContent = "This item is available. Photos, colours and pricing are being updated.";
+  } else if (!chosenSize) {
     variantStatus.textContent = `${variant.name} is sold out.`;
   } else if (previousSize && previousSize !== chosenSize) {
     variantStatus.textContent =
@@ -1049,7 +1058,7 @@ addToBagButton.addEventListener("click", () => {
   const selectedSize = getSelectedSize();
 
   // Only a size that exists in the chosen colour can be added
-  if (!selectedSize || !selectedVariant || !isSizeAvailable(selectedVariant, selectedSize)) {
+  if (selectedProduct.placeholder || !selectedSize || !selectedVariant || !isSizeAvailable(selectedVariant, selectedSize)) {
     return;
   }
 
@@ -1136,7 +1145,7 @@ function renderBag() {
   bagEmpty.hidden = itemCount > 0;
   bagSummary.hidden = itemCount === 0;
   bagSubtotal.textContent = formatNaira(totals.subtotal);
-  bagTotalPrice.textContent = formatNaira(totals.total);
+  bagTotalPrice.textContent = formatOrderTotal(totals);
 
   updateCheckoutButton();
 
@@ -1280,7 +1289,7 @@ function renderOrderLines(container, items) {
 }
 
 function updatePlaceOrderLabel() {
-  const total = formatNaira(getOrderTotals().total);
+  const total = formatOrderTotal(getOrderTotals());
 
   placeOrderButton.textContent = `Place order · ${total}`;
 }
@@ -1293,9 +1302,9 @@ function renderCheckoutSummary() {
   checkoutSubtotal.textContent = formatNaira(totals.subtotal);
   checkoutFulfilmentLabel.textContent =
     selectedFulfilment === "delivery" ? "Delivery" : "Pickup";
-  checkoutDelivery.textContent =
-    totals.deliveryFee > 0 ? formatNaira(totals.deliveryFee) : "Free";
-  checkoutTotal.textContent = formatNaira(totals.total);
+  checkoutDelivery.textContent = totals.deliveryFee === null
+    ? "Quoted by location" : totals.deliveryFee > 0 ? formatNaira(totals.deliveryFee) : "Free";
+  checkoutTotal.textContent = formatOrderTotal(totals);
 
   updatePlaceOrderLabel();
 }
@@ -1332,7 +1341,10 @@ function getFieldError(input) {
       return !value || EMAIL_PATTERN.test(value) ? "" : "Enter a valid email address.";
 
     case "area":
-      return isDelivery && !value ? "Please choose your delivery area." : "";
+      return isDelivery && !value ? "Please choose your state." : "";
+
+    case "city":
+      return isDelivery && value.length < 2 ? "Please enter your city or LGA." : "";
 
     case "address":
       return isDelivery && value.length < 6
@@ -1398,6 +1410,8 @@ checkoutForm.addEventListener("input", (event) => {
     setFieldError(input, getFieldError(input));
   }
 });
+
+areaSelect.addEventListener("change", renderCheckoutSummary);
 
 function getSelectedPayment() {
   return checkoutForm.querySelector('input[name="payment"]:checked').value;
@@ -1473,7 +1487,9 @@ function getNextStepsText(order) {
     return `We'll call ${phone} to confirm your pickup time. You pay when you collect.`;
   }
 
-  return `We'll call ${phone} to confirm your order. Delivery takes ${storeConfig.deliveryTime}, and you pay when it arrives.`;
+  const deliveryTime = order.customer.area === "Lagos"
+    ? storeConfig.lagosDeliveryTime : storeConfig.nationwideDeliveryTime;
+  return `We'll call ${phone} to confirm your order and delivery fee. Delivery takes ${deliveryTime} after confirmation.`;
 }
 
 function renderSuccess(order) {
@@ -1485,12 +1501,12 @@ function renderSuccess(order) {
   renderOrderLines(successItems, order.items);
 
   successSubtotal.textContent = formatNaira(order.totals.subtotal);
-  successDelivery.textContent =
-    order.totals.deliveryFee > 0 ? formatNaira(order.totals.deliveryFee) : "Free";
-  successTotal.textContent = formatNaira(order.totals.total);
+  successDelivery.textContent = order.totals.deliveryFee === null
+    ? "Quoted by location" : order.totals.deliveryFee > 0 ? formatNaira(order.totals.deliveryFee) : "Free";
+  successTotal.textContent = formatOrderTotal(order.totals);
 
   successFulfilment.textContent =
-    order.fulfilment === "delivery" ? `Delivery · ${order.customer.area}` : "Pickup";
+    order.fulfilment === "delivery" ? `Delivery · ${order.customer.city}, ${order.customer.area}` : "Pickup";
   successPayment.textContent = PAYMENT_LABELS[order.payment];
   successReferenceRow.hidden = !order.paymentReference;
   successReference.textContent = order.paymentReference || "";
@@ -1515,6 +1531,7 @@ function buildOrderFromForm() {
       phone: getValue("phone"),
       email: getValue("email"),
       area: isDelivery ? getValue("area") : "",
+      city: isDelivery ? getValue("city") : "",
       address: isDelivery ? getValue("address") : "",
       notes: getValue("notes")
     },
@@ -1635,7 +1652,9 @@ function setUpScrollEffects() {
     const sectionLinks = new Map();
 
     navigationLinks.forEach((link) => {
-      const section = document.getElementById(link.getAttribute("href").slice(1));
+      const href = link.getAttribute("href");
+      if (!href.startsWith("#")) return;
+      const section = document.getElementById(href.slice(1));
 
       if (section) {
         sectionLinks.set(section, link);
@@ -1673,11 +1692,23 @@ function setUpScrollEffects() {
 
 setUpStoreDetails();
 reconcileShoppingBag();
-renderSearchChips();
 renderCategoryFilters();
 renderProducts();
+renderNewArrivals();
 renderBag();
-setShopView(false, { scroll: false, animate: false });
+setShopView(pageIsShop, { scroll: false, animate: false });
+if (pageIsShop) {
+  const parameters = new URLSearchParams(window.location.search);
+  const category = parameters.get("category");
+  activeQuery = (parameters.get("q") || "").trim();
+  siteSearchInput.value = activeQuery;
+
+  if (category === "accessories" || productCategories.some((item) => item.id === category)) {
+    setActiveFilter(category);
+  }
+
+  updateProductVisibility(false);
+}
 updateHeaderState();
 
 // Only hide-then-reveal content once everything above has worked

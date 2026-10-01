@@ -3,36 +3,28 @@ const storeConfig = {
   orderingEnabled: false,
 
   // Shown in the black bar at the top. Set to "" to hide it.
-  announcement: "Online orders coming soon!",
+  announcement: "Browse now. Online checkout opens soon.",
 
   currency: "NGN",
   currencySymbol: "₦",
-  deliveryFee: 2500,
-  deliveryTime: "1–3 business days",
+  lagosDeliveryFee: 2500,
+  lagosDeliveryTime: "1–3 business days",
+  nationwideDeliveryTime: "3–5 business days",
   pickupAvailable: true,
-  exchangeWindowDays: 2,
   maxQuantityPerItem: 10,
 
-  // Options in the checkout "Delivery area" dropdown
-  deliveryAreas: [
-    "Ikeja",
-    "Lekki",
-    "Victoria Island",
-    "Ikoyi",
-    "Yaba",
-    "Surulere",
-    "Ajah",
-    "Maryland",
-    "Gbagada",
-    "Ikorodu",
-    "Epe",
-    "Badagry",
-    "Other (Lagos State)"
+  deliveryStates: [
+    "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa",
+    "Benue", "Borno", "Cross River", "Delta", "Ebonyi", "Edo",
+    "Ekiti", "Enugu", "FCT", "Gombe", "Imo", "Jigawa", "Kaduna",
+    "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos",
+    "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo",
+    "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara"
   ],
 
   // Optional footer links. Leave as "" to keep them hidden.
   // WhatsApp: full number with country code, digits only, e.g. "2348012345678"
   // Instagram: your handle, e.g. "apexattire"
-  whatsappNumber: "",
+  whatsappNumber: "2348150778995",
   instagramHandle: ""
 };
