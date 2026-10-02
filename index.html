@@ -21,7 +21,7 @@
     href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   >
-  <link rel="stylesheet" href="style.css?v=17">
+  <link rel="stylesheet" href="style.css?v=29">
 </head>
 
 <body id="top" data-page="home">
@@ -40,13 +40,13 @@
         <a href="shop.html">Shop</a>
         <a href="#delivery">Delivery</a>
         <a href="#about">About</a>
-        <button class="mobile-account-toggle" type="button" disabled aria-label="Account coming soon">
+        <a class="mobile-account-toggle" href="account.html" aria-label="Account">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="8" r="3.5"></circle>
             <path d="M5 20C5 16.5 8 14 12 14S19 16.5 19 20"></path>
           </svg>
-          <span>Account <small>Coming soon</small></span>
-        </button>
+          <span>Account</span>
+        </a>
       </nav>
 
       <div class="header-search-wrap">
@@ -85,12 +85,12 @@
           <span class="bag-count" data-count="0">0</span>
         </button>
 
-        <button class="account-toggle" type="button" aria-label="Account coming soon" title="Account coming soon" disabled>
+        <a class="account-toggle" href="account.html" aria-label="Account" title="Account">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="8" r="3.5"></circle>
             <path d="M5 20C5 16.5 8 14 12 14S19 16.5 19 20"></path>
           </svg>
-        </button>
+        </a>
 
         <button
           class="menu-toggle"
@@ -218,7 +218,7 @@
             <circle cx="17" cy="18" r="1.6"></circle>
           </svg>
           <h3>Nationwide Delivery</h3>
-          <p>We deliver across Nigeria. Lagos delivery is ₦2,500; elsewhere, the courier fee depends on your state, city and parcel. We’ll confirm the exact fee before payment.</p>
+          <p>We deliver across Nigeria. Your delivery fee depends on your state and city/LGA and appears before you place an order.</p>
         </article>
 
         <article class="service-card reveal">
@@ -287,8 +287,8 @@
     </button>
 
     <img class="dialog-image" alt="">
-
     <div class="dialog-content">
+      <div class="dialog-thumbnails" aria-label="Product photos" hidden></div>
       <p class="dialog-category"></p>
       <h2 class="dialog-title" id="dialog-title"></h2>
       <p class="dialog-price"></p>
@@ -305,12 +305,20 @@
           <div class="size-options"></div>
         </div>
 
+        <details class="size-guide" hidden>
+          <summary>Size &amp; fit guide</summary>
+          <p class="size-guide-intro"></p>
+          <ul class="size-guide-steps"></ul>
+          <p class="size-guide-note">Sizes can vary between pieces. For exact item measurements, <a href="https://wa.me/2348150778995" target="_blank" rel="noopener noreferrer">ask us on WhatsApp</a> before choosing.</p>
+        </details>
+
         <p class="variant-status" role="status" aria-live="polite"></p>
       </div>
 
       <button class="add-to-bag-button" type="button">Add to bag</button>
       <button class="button button-secondary view-bag-button" type="button" hidden>View bag</button>
       <p class="bag-feedback" role="status" aria-live="polite"></p>
+      <a class="button button-secondary bag-auth-link" href="account.html" hidden>Sign in to save items</a>
 
       <p class="dialog-policy"></p>
     </div>
@@ -330,9 +338,11 @@
 
       <div class="bag-empty">
         <p class="bag-empty-message">Nothing in your bag yet. Find a piece worth keeping.</p>
+        <a class="button button-primary bag-sign-in" href="account.html" hidden>Sign in to view your bag</a>
         <button class="button button-secondary bag-continue-button" type="button">Continue shopping</button>
       </div>
 
+      <p class="bag-error" role="alert" hidden></p>
       <div class="bag-items"></div>
 
       <div class="bag-summary" hidden>
@@ -363,7 +373,7 @@
         </p>
 
         <button class="checkout-button" type="button" disabled>Online ordering opens soon</button>
-        <p class="bag-save-note">Your picks stay saved on this device. Online checkout is not open yet.</p>
+        <p class="bag-save-note">Your picks are saved to your account. Online checkout is not open yet.</p>
       </div>
     </div>
   </dialog>
@@ -399,8 +409,8 @@
             </div>
 
             <div class="form-field">
-              <label for="checkout-email">Email <span class="optional" id="checkout-email-optional">(optional)</span></label>
-              <input id="checkout-email" name="email" type="email" autocomplete="email" aria-describedby="checkout-email-error">
+              <label for="checkout-email">Account email <span class="optional" id="checkout-email-optional" hidden></span></label>
+              <input id="checkout-email" name="email" type="email" autocomplete="email" readonly aria-describedby="checkout-email-error">
               <p class="field-error" id="checkout-email-error"></p>
             </div>
           </div>
@@ -436,13 +446,13 @@
             <legend>Payment method</legend>
 
             <label>
-              <input type="radio" name="payment" value="cod" checked>
-              <span>Pay when you receive</span>
+              <input type="radio" name="payment" value="paystack" checked>
+              <span>Pay securely with Paystack</span>
             </label>
 
             <label>
-              <input type="radio" name="payment" value="transfer">
-              <span>Bank transfer</span>
+              <input type="radio" name="payment" value="cod">
+              <span>Pay on delivery (Lagos) or pickup</span>
             </label>
           </fieldset>
 
@@ -504,7 +514,6 @@
       </div>
 
       <p class="success-next"></p>
-      <p class="success-demo-note">Demo: no real order or payment was made.</p>
 
       <button class="button button-primary success-continue-button" type="button">Continue shopping</button>
     </div>
@@ -536,9 +545,12 @@
     </div>
   </footer>
 
-  <script src="store-config.js?v=4"></script>
-  <script src="products.js?v=4"></script>
-  <script src="cart.js"></script>
-  <script src="script.js?v=8"></script>
+  <script src="store-config.js?v=5"></script>
+  <script src="products.js?v=5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="cart.js?v=2"></script>
+  <script src="catalogue-loader.js?v=1"></script>
+  <script src="storefront-start.js?v=4"></script>
+  <script src="account-modal.js?v=1"></script>
 </body>
 </html>

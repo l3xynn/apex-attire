@@ -40,11 +40,15 @@ const shopAllButton = document.querySelector(".shop-all-button");
 const productDialog = document.querySelector(".product-dialog");
 const dialogCloseButton = document.querySelector(".dialog-close-button");
 const dialogImage = document.querySelector(".dialog-image");
+const dialogThumbnails = document.querySelector(".dialog-thumbnails");
 const dialogCategory = document.querySelector(".dialog-category");
 const dialogTitle = document.querySelector(".dialog-title");
 const dialogPrice = document.querySelector(".dialog-price");
 const dialogDescription = document.querySelector(".dialog-description");
 const dialogSizeOptions = document.querySelector(".size-options");
+const sizeGuide = document.querySelector(".size-guide");
+const sizeGuideIntro = document.querySelector(".size-guide-intro");
+const sizeGuideSteps = document.querySelector(".size-guide-steps");
 const dialogColourName = document.querySelector(".dialog-colour-name");
 const colourOptions = document.querySelector(".colour-options");
 const variantStatus = document.querySelector(".variant-status");
@@ -52,6 +56,7 @@ const dialogPolicy = document.querySelector(".dialog-policy");
 const addToBagButton = document.querySelector(".add-to-bag-button");
 const viewBagButton = document.querySelector(".view-bag-button");
 const bagFeedback = document.querySelector(".bag-feedback");
+const bagAuthLink = document.querySelector(".bag-auth-link");
 
 const bagToggle = document.querySelector(".bag-toggle");
 const bagDialog = document.querySelector(".bag-dialog");
@@ -59,6 +64,9 @@ const bagCloseButton = document.querySelector(".bag-close-button");
 const bagCount = document.querySelector(".bag-count");
 const bagItems = document.querySelector(".bag-items");
 const bagEmpty = document.querySelector(".bag-empty");
+const bagEmptyMessage = document.querySelector(".bag-empty-message");
+const bagSignInLink = document.querySelector(".bag-sign-in");
+const bagError = document.querySelector(".bag-error");
 const bagContinueButton = document.querySelector(".bag-continue-button");
 const bagSummary = document.querySelector(".bag-summary");
 const bagSubtotal = document.querySelector(".bag-subtotal");
@@ -74,6 +82,7 @@ const checkoutForm = document.querySelector(".checkout-form");
 const checkoutBackButton = document.querySelector(".checkout-back-button");
 const deliveryFields = document.querySelector(".delivery-fields");
 const areaSelect = document.querySelector("#checkout-area");
+const cityInput = document.querySelector("#checkout-city");
 const placeOrderButton = document.querySelector(".place-order-button");
 const checkoutSummaryItems = document.querySelector(".checkout-summary-items");
 const checkoutSubtotal = document.querySelector(".checkout-subtotal");
@@ -118,13 +127,15 @@ let activeQuery = "";
 let selectedFulfilment = document.querySelector('input[name="fulfilment"]:checked').value;
 let addedButtonTimeout = null;
 let isPlacingOrder = false;
+let bagActionPending = false;
+let deliveryRates = [];
 
 const DIALOG_CLOSE_DELAY = 180;
 const FALLBACK_BEST_SELLER_COUNT = 6;
 
 const PAYMENT_LABELS = {
-  cod: "Pay when you receive",
-  transfer: "Bank transfer"
+  cod: "Pay on delivery / pickup",
+  paystack: "Paid with Paystack"
 };
 
 const PHONE_PATTERN = /^(?:\+?234|0)[789][01]\d{8}$/;
@@ -149,9 +160,11 @@ function getCategoryLabel(categoryId) {
 
 function getOrderTotals() {
   const subtotal = getBagSubtotal();
-  const deliveryFee = selectedFulfilment === "pickup"
-    ? 0
-    : areaSelect.value === "Lagos" ? storeConfig.lagosDeliveryFee : null;
+  const state = areaSelect.value;
+  const city = cityInput.value.trim().toLowerCase().replace(/\s+/g, " ");
+  const rate = deliveryRates.find((item) => item.state === state && item.city_lga === city) ||
+    deliveryRates.find((item) => item.state === state && item.city_lga === "");
+  const deliveryFee = selectedFulfilment === "pickup" ? 0 : rate?.fee_naira ?? null;
 
   return { subtotal, deliveryFee, total: deliveryFee === null ? null : subtotal + deliveryFee };
 }
@@ -202,10 +215,12 @@ function getProductVariants(product) {
       name: colour.name,
       hex: colour.hex || COLOUR_HEX[String(colour.name).trim().toLowerCase()] || null,
       image: colour.image || product.image,
+      photos: Array.isArray(colour.photos) && colour.photos.length
+        ? colour.photos : [colour.image || product.image],
       imageAlt: colour.imageAlt || `${colour.name} ${product.name}`,
       price: Number.isFinite(colour.price) ? colour.price : product.price,
       unavailableSizes,
-      soldOut: Boolean(colour.soldOut) || hasNoSizeLeft
+      soldOut: Boolean(product.soldOut) || Boolean(colour.soldOut) || hasNoSizeLeft
     };
   });
 }
@@ -246,15 +261,12 @@ function getCardPriceText(variant, variants) {
 }
 
 function reconcileShoppingBag() {
-  let changed = false;
-
   for (let index = shoppingBag.length - 1; index >= 0; index -= 1) {
     const bagItem = shoppingBag[index];
     const product = products.find((item) => item.id === bagItem.id);
 
     if (!product) {
       shoppingBag.splice(index, 1);
-      changed = true;
       continue;
     }
 
@@ -268,7 +280,6 @@ function reconcileShoppingBag() {
       !isSizeAvailable(variant, bagItem.size)
     ) {
       shoppingBag.splice(index, 1);
-      changed = true;
       continue;
     }
 
@@ -282,12 +293,7 @@ function reconcileShoppingBag() {
       bagItem.price = variant.price;
       bagItem.image = variant.image;
       bagItem.colour = variant.name;
-      changed = true;
     }
-  }
-
-  if (changed) {
-    saveShoppingBag();
   }
 }
 
@@ -356,9 +362,7 @@ function setUpStoreDetails() {
     announcementBar.hidden = false;
   }
 
-  dialogPolicy.textContent =
-    `Nationwide delivery · Lagos ${formatNaira(storeConfig.lagosDeliveryFee)} · ` +
-    "Other locations quoted after state, city and parcel details are confirmed.";
+  dialogPolicy.textContent = "Nationwide delivery · Fee calculated by state and city/LGA at checkout.";
 
   footerYear.textContent = new Date().getFullYear();
 
@@ -738,7 +742,8 @@ function setSearchExpanded(expanded) {
   siteSearchButton.setAttribute("aria-expanded", String(expanded));
   siteSearchButton.setAttribute("aria-label", expanded ? "Search products" : "Open search");
   if (expanded) {
-    siteSearchInput.focus();
+    setMenuOpen(false);
+    siteSearchInput.focus({ preventScroll: true });
   } else {
     closeSearchPanel();
   }
@@ -945,6 +950,27 @@ function renderSizeOptions(product, variant, preferredSize) {
   return chosenSize || "";
 }
 
+function renderSizeGuide(product) {
+  const guidance = {
+    apparel: ["Measure around the fullest part of your chest.", "Compare shoulder width and body length with a top you own."],
+    pants: ["Measure your waist where the trousers will sit.", "Compare hip width and inseam with trousers that fit you well."],
+    shorts: ["Measure your waist where the shorts will sit.", "Compare hip width and outseam with shorts that fit you well."],
+    shoes: ["Measure your foot from heel to longest toe while standing.", "Check both feet and use the longer measurement when comparing sizes."],
+    caps: ["Measure around your head just above your eyebrows and ears.", "Compare that circumference with the cap’s adjustable range."]
+  };
+  const steps = guidance[product.category];
+  sizeGuide.hidden = !steps || product.sizes.length < 2;
+  sizeGuide.open = false;
+  if (!steps || product.sizes.length < 2) return;
+
+  sizeGuideIntro.textContent = `Choosing ${product.name}? Use these checks before selecting a size:`;
+  sizeGuideSteps.replaceChildren(...steps.map((step) => {
+    const item = document.createElement("li");
+    item.textContent = step;
+    return item;
+  }));
+}
+
 // Selects a colour: picture, name, price, sizes and the button all follow it
 function applyVariant(product, variant, { animate = true } = {}) {
   const previousSize = getSelectedSize();
@@ -962,12 +988,34 @@ function applyVariant(product, variant, { animate = true } = {}) {
     dialogImage.alt = variant.imageAlt;
   }
 
+  dialogThumbnails.replaceChildren();
+  dialogThumbnails.hidden = variant.photos.length < 2;
+  variant.photos.forEach((photo, index) => {
+    const button = document.createElement("button");
+    const thumbnail = document.createElement("img");
+    button.type = "button";
+    button.className = "dialog-thumbnail";
+    button.setAttribute("aria-label", `View photo ${index + 1} of ${variant.name}`);
+    button.setAttribute("aria-pressed", String(index === 0));
+    thumbnail.src = photo;
+    thumbnail.alt = "";
+    button.append(thumbnail);
+    button.addEventListener("click", () => {
+      swapImage(dialogImage, photo, `${variant.imageAlt}, photo ${index + 1}`);
+      dialogThumbnails.querySelectorAll("button").forEach((item) => {
+        item.setAttribute("aria-pressed", String(item === button));
+      });
+    });
+    dialogThumbnails.append(button);
+  });
+
   const chosenSize = renderSizeOptions(product, variant, previousSize);
 
   addToBagButton.disabled = !chosenSize || product.placeholder;
   resetAddToBagButton();
   viewBagButton.hidden = true;
   bagFeedback.textContent = "";
+  bagAuthLink.hidden = true;
 
   if (product.placeholder) {
     variantStatus.textContent = "This item is available. Photos, colours and pricing are being updated.";
@@ -1034,6 +1082,7 @@ function openProductDialog(product, variantIndex = 0) {
 
   dialogSizeOptions.replaceChildren();
   renderColourOptions(product, variants, startIndex);
+  renderSizeGuide(product);
   applyVariant(product, variants[startIndex], { animate: false });
 
   openDialog(productDialog);
@@ -1050,8 +1099,8 @@ function bumpBagCount() {
   bagCount.classList.add("is-bumping");
 }
 
-addToBagButton.addEventListener("click", () => {
-  if (!selectedProduct) {
+addToBagButton.addEventListener("click", async () => {
+  if (!selectedProduct || bagActionPending) {
     return;
   }
 
@@ -1062,32 +1111,50 @@ addToBagButton.addEventListener("click", () => {
     return;
   }
 
-  const wasAdded = addItemToBag({
-    id: selectedProduct.id,
-    name: selectedProduct.name,
-    price: selectedVariant.price,
-    size: selectedSize,
-    colour: selectedVariant.name,
-    image: selectedVariant.image
-  });
-
-  renderBag();
-
-  if (!wasAdded) {
-    bagFeedback.textContent =
-      `You already have the maximum of ${storeConfig.maxQuantityPerItem} of this item in your bag.`;
+  if (getBagAccessState() !== "ready") {
+    bagFeedback.textContent = getBagAccessState() === "signed-out"
+      ? "Sign in to save this item to your bag."
+      : getBagAccessState() === "loading" ? "Your account is loading. Please try again."
+        : getBagAccessError();
+    bagAuthLink.hidden = getBagAccessState() !== "signed-out";
     return;
   }
 
-  bumpBagCount();
-  bagFeedback.textContent = "Added to your bag.";
-  viewBagButton.hidden = false;
+  bagActionPending = true;
+  addToBagButton.disabled = true;
+  bagAuthLink.hidden = true;
+  try {
+    const wasAdded = await addItemToBag({
+      id: selectedProduct.id,
+      name: selectedProduct.name,
+      price: selectedVariant.price,
+      size: selectedSize,
+      colour: selectedVariant.name,
+      image: selectedVariant.image
+    });
+    renderBag();
 
-  addToBagButton.textContent = "Added ✓";
-  addToBagButton.classList.add("is-added");
+    if (!wasAdded) {
+      bagFeedback.textContent =
+        `You already have the maximum of ${storeConfig.maxQuantityPerItem} of this item in your bag.`;
+      return;
+    }
 
-  clearTimeout(addedButtonTimeout);
-  addedButtonTimeout = setTimeout(resetAddToBagButton, 1600);
+    bumpBagCount();
+    bagFeedback.textContent = "Added to your bag.";
+    viewBagButton.hidden = false;
+    addToBagButton.textContent = "Added ✓";
+    addToBagButton.classList.add("is-added");
+    clearTimeout(addedButtonTimeout);
+    addedButtonTimeout = setTimeout(resetAddToBagButton, 1600);
+  } catch (error) {
+    bagFeedback.textContent = error.message || "Could not save this item. Please try again.";
+  } finally {
+    bagActionPending = false;
+    addToBagButton.disabled = !selectedProduct || selectedProduct.placeholder ||
+      !selectedVariant || !getSelectedSize() ||
+      !isSizeAvailable(selectedVariant, getSelectedSize());
+  }
 });
 
 viewBagButton.addEventListener("click", () => {
@@ -1105,8 +1172,12 @@ function openBag() {
 }
 
 function updateCheckoutButton() {
-  checkoutButton.disabled = true;
-  checkoutButton.textContent = "Online ordering opens soon";
+  checkoutButton.disabled = !storeConfig.orderingEnabled || getBagAccessState() !== "ready" ||
+    shoppingBag.length === 0 || catalogueUnavailable;
+  checkoutButton.textContent = storeConfig.orderingEnabled ? "Continue to checkout" : "Online ordering opens soon";
+  document.querySelector(".bag-save-note").textContent = storeConfig.orderingEnabled
+    ? "Your picks are saved to your account. Delivery is calculated before payment."
+    : "Your picks are saved to your account. Online checkout is not open yet.";
 }
 
 function restoreBagFocus(bagItem, action) {
@@ -1121,16 +1192,39 @@ function restoreBagFocus(bagItem, action) {
   target.focus();
 }
 
-function changeQuantityAndRefocus(bagItem, change, action) {
-  changeBagItemQuantity(bagItem.id, bagItem.size, bagItem.colour, change);
-  renderBag();
-  restoreBagFocus(bagItem, action);
+async function changeQuantityAndRefocus(bagItem, change, action) {
+  if (bagActionPending) return;
+  bagActionPending = true;
+  bagError.hidden = true;
+  try {
+    await changeBagItemQuantity(bagItem.id, bagItem.size, bagItem.colour, change);
+    renderBag();
+    restoreBagFocus(bagItem, action);
+  } catch (error) {
+    bagError.textContent = error.message || "Could not update your bag. Please try again.";
+    bagError.hidden = false;
+  } finally {
+    bagActionPending = false;
+  }
 }
 
 function renderBag() {
   bagItems.replaceChildren();
 
-  const itemCount = getBagItemCount();
+  if (catalogueUnavailable) {
+    bagCount.textContent = "0";
+    bagCount.dataset.count = "0";
+    bagEmpty.hidden = false;
+    bagSummary.hidden = true;
+    bagSignInLink.hidden = true;
+    bagError.hidden = true;
+    bagEmptyMessage.textContent = "The collection is temporarily unavailable. Your saved items are safe; please try again shortly.";
+    updateCheckoutButton();
+    return;
+  }
+
+  const accessState = getBagAccessState();
+  const itemCount = accessState === "ready" ? getBagItemCount() : 0;
   const totals = getOrderTotals();
 
   bagCount.textContent = itemCount;
@@ -1144,10 +1238,19 @@ function renderBag() {
 
   bagEmpty.hidden = itemCount > 0;
   bagSummary.hidden = itemCount === 0;
+  bagSignInLink.hidden = accessState !== "signed-out";
+  bagEmptyMessage.textContent = accessState === "signed-out"
+    ? "Sign in to see the items saved to your account."
+    : accessState === "loading" ? "Loading your bag…"
+      : accessState === "error" ? getBagAccessError()
+        : "Nothing in your bag yet. Find a piece worth keeping.";
+  if (accessState !== "ready") bagError.hidden = true;
   bagSubtotal.textContent = formatNaira(totals.subtotal);
   bagTotalPrice.textContent = formatOrderTotal(totals);
 
   updateCheckoutButton();
+
+  if (accessState !== "ready") return;
 
   shoppingBag.forEach((bagItem) => {
     const itemKey = getItemKey(bagItem);
@@ -1204,10 +1307,20 @@ function renderBag() {
       changeQuantityAndRefocus(bagItem, 1, "increase");
     });
 
-    removeButton.addEventListener("click", () => {
-      removeBagItem(bagItem.id, bagItem.size, bagItem.colour);
-      renderBag();
-      restoreBagFocus(bagItem, "remove");
+    removeButton.addEventListener("click", async () => {
+      if (bagActionPending) return;
+      bagActionPending = true;
+      bagError.hidden = true;
+      try {
+        await removeBagItem(bagItem.id, bagItem.size, bagItem.colour);
+        renderBag();
+        restoreBagFocus(bagItem, "remove");
+      } catch (error) {
+        bagError.textContent = error.message || "Could not remove this item. Please try again.";
+        bagError.hidden = false;
+      } finally {
+        bagActionPending = false;
+      }
     });
 
     quantityControls.append(decreaseButton, quantityLabel, increaseButton);
@@ -1218,6 +1331,12 @@ function renderBag() {
 }
 
 bagToggle.addEventListener("click", openBag);
+checkoutButton.addEventListener("click", () => {
+  if (!checkoutButton.disabled) {
+    bagDialog.close();
+    openCheckout();
+  }
+});
 
 bagCloseButton.addEventListener("click", () => {
   closeDialog(bagDialog);
@@ -1234,20 +1353,19 @@ fulfilmentOptions.forEach((fulfilmentOption) => {
   fulfilmentOption.addEventListener("change", () => {
     selectedFulfilment = fulfilmentOption.value;
     renderBag();
+    updatePaymentUI();
   });
 });
 
-// Keep the bag in sync if the store is open in more than one tab
-window.addEventListener("storage", (event) => {
-  if (event.key === BAG_STORAGE_KEY) {
-    refreshShoppingBag();
+window.addEventListener("bag-change", () => {
+  if (!catalogueUnavailable && getBagAccessState() === "ready") {
     reconcileShoppingBag();
-    renderBag();
   }
+  renderBag();
 });
 
 /* ==========================================================
-   Checkout (demo)
+   Checkout
    ========================================================== */
 
 // Builds the list of items shown in the checkout summary and the confirmation
@@ -1290,8 +1408,7 @@ function renderOrderLines(container, items) {
 
 function updatePlaceOrderLabel() {
   const total = formatOrderTotal(getOrderTotals());
-
-  placeOrderButton.textContent = `Place order · ${total}`;
+  placeOrderButton.textContent = `${getSelectedPayment() === "paystack" ? "Pay with Paystack" : "Place order"} · ${total}`;
 }
 
 function renderCheckoutSummary() {
@@ -1411,18 +1528,25 @@ checkoutForm.addEventListener("input", (event) => {
   }
 });
 
-areaSelect.addEventListener("change", renderCheckoutSummary);
+areaSelect.addEventListener("change", () => {
+  renderCheckoutSummary();
+  updatePaymentUI();
+});
+cityInput.addEventListener("input", renderCheckoutSummary);
 
 function getSelectedPayment() {
   return checkoutForm.querySelector('input[name="payment"]:checked').value;
 }
 
 function setDefaultPayment() {
-  checkoutForm.querySelector('input[name="payment"][value="cod"]').checked = true;
+  checkoutForm.querySelector('input[name="payment"][value="paystack"]').checked = true;
 }
 
 function updatePaymentUI() {
-  emailOptionalLabel.hidden = false;
+  emailOptionalLabel.hidden = true;
+  const codRadio = checkoutForm.querySelector('input[name="payment"][value="cod"]');
+  codRadio.disabled = selectedFulfilment === "delivery" && areaSelect.value !== "Lagos";
+  if (codRadio.disabled && codRadio.checked) setDefaultPayment();
   paymentError.hidden = true;
 
   // If the email box already shows an error, re-check it for the new method
@@ -1448,10 +1572,19 @@ paymentRadios.forEach((paymentRadio) => {
 
 /* ----- Opening, placing, confirming ----- */
 
-function openCheckout() {
+async function openCheckout() {
   if (shoppingBag.length === 0) {
     return;
   }
+
+  const { data, error } = await bagClient.auth.getUser();
+  if (error || !data.user?.email) {
+    bagError.textContent = "Sign in again before checking out.";
+    bagError.hidden = false;
+    openBag();
+    return;
+  }
+  emailInput.value = data.user.email;
 
   clearCheckoutErrors();
   showCheckoutView("form");
@@ -1464,23 +1597,11 @@ function openCheckout() {
   checkoutDialog.scrollTop = 0;
 }
 
-function generateOrderNumber() {
-  const now = new Date();
-  const datePart = [
-    String(now.getFullYear()).slice(2),
-    String(now.getMonth() + 1).padStart(2, "0"),
-    String(now.getDate()).padStart(2, "0")
-  ].join("");
-  const randomPart = Math.floor(1000 + Math.random() * 9000);
-
-  return `APX-${datePart}-${randomPart}`;
-}
-
 function getNextStepsText(order) {
   const phone = order.customer.phone;
 
-  if (order.payment === "transfer") {
-    return `We'll message ${phone} with our bank details. Your order is confirmed once payment is received.`;
+  if (order.payment === "paystack") {
+    return `Payment confirmed. We'll contact ${phone} with the next update about your order.`;
   }
 
   if (order.fulfilment === "pickup") {
@@ -1489,7 +1610,7 @@ function getNextStepsText(order) {
 
   const deliveryTime = order.customer.area === "Lagos"
     ? storeConfig.lagosDeliveryTime : storeConfig.nationwideDeliveryTime;
-  return `We'll call ${phone} to confirm your order and delivery fee. Delivery takes ${deliveryTime} after confirmation.`;
+  return `We'll call ${phone} to confirm your order. Delivery takes ${deliveryTime} after confirmation.`;
 }
 
 function renderSuccess(order) {
@@ -1520,27 +1641,81 @@ function buildOrderFromForm() {
   const isDelivery = selectedFulfilment === "delivery";
 
   return {
-    number: generateOrderNumber(),
-    items: shoppingBag.map((bagItem) => ({ ...bagItem })),
-    totals: getOrderTotals(),
+    action: "start",
     fulfilment: selectedFulfilment,
     payment: getValue("payment"),
-    paymentReference: "",
     customer: {
       name: getValue("name"),
       phone: getValue("phone"),
-      email: getValue("email"),
       area: isDelivery ? getValue("area") : "",
       city: isDelivery ? getValue("city") : "",
       address: isDelivery ? getValue("address") : "",
       notes: getValue("notes")
-    },
-    placedAt: new Date().toISOString()
+    }
   };
 }
 
-function finishOrder(order) {
-  clearShoppingBag();
+function orderFromSaved(saved) {
+  return {
+    number: saved.order_number,
+    items: saved.items,
+    totals: {
+      subtotal: saved.subtotal_naira,
+      deliveryFee: saved.delivery_fee_naira,
+      total: saved.total_naira
+    },
+    fulfilment: saved.fulfilment,
+    payment: saved.payment_method,
+    paymentReference: saved.paystack_reference,
+    customer: {
+      name: saved.customer_name,
+      phone: saved.customer_phone,
+      area: saved.delivery_state,
+      city: saved.delivery_city
+    }
+  };
+}
+
+async function invokeCheckout(body) {
+  const { data, error } = await bagClient.functions.invoke("checkout", { body });
+  if (error) {
+    let message = "Checkout is temporarily unavailable. Please try again.";
+    try {
+      const details = await error.context?.json();
+      if (details?.error) message = details.error;
+    } catch {
+    }
+    throw new Error(message);
+  }
+  return data;
+}
+
+async function finishOrder(order) {
+  if (getBagAccessState() === "loading") {
+    await new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        window.removeEventListener("bag-change", onBagChange);
+        resolve();
+      }, 5000);
+      function onBagChange() {
+        if (getBagAccessState() === "loading") return;
+        clearTimeout(timeout);
+        window.removeEventListener("bag-change", onBagChange);
+        resolve();
+      }
+      window.addEventListener("bag-change", onBagChange);
+    });
+  }
+  try {
+    for (const purchased of order.items) {
+      const saved = shoppingBag.find((item) => isSameBagItem(item, purchased.id, purchased.size, purchased.colour));
+      if (saved) {
+        await changeBagItemQuantity(purchased.id, purchased.size, purchased.colour, -purchased.quantity);
+      }
+    }
+  } catch (error) {
+    console.warn("Order saved, but some purchased items could not be removed from the bag.", error);
+  }
   renderBag();
   renderSuccess(order);
   showCheckoutView("success");
@@ -1580,10 +1755,58 @@ checkoutDialog.addEventListener("close", () => {
   }
 });
 
-checkoutForm.addEventListener("submit", (event) => {
+checkoutForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  showPaymentProblem("Online ordering is not available yet.");
+  if (!storeConfig.orderingEnabled || isPlacingOrder || !validateCheckoutForm()) return;
+  if (getOrderTotals().deliveryFee === null) {
+    showPaymentProblem("Choose a location with a confirmed delivery fee before placing your order.");
+    return;
+  }
+  isPlacingOrder = true;
+  placeOrderButton.disabled = true;
+  placeOrderButton.textContent = "Saving your order…";
+  paymentError.hidden = true;
+  try {
+    const result = await invokeCheckout(buildOrderFromForm());
+    if (result.status === "payment_required") {
+      const paymentUrl = new URL(result.authorization_url);
+      if (paymentUrl.protocol !== "https:" || paymentUrl.hostname !== "checkout.paystack.com") {
+        throw new Error("The payment link is invalid. Please try again.");
+      }
+      window.location.assign(paymentUrl.href);
+      return;
+    }
+    if (result.status !== "placed") throw new Error("Could not confirm this order.");
+    const saved = await invokeCheckout({ action: "order", orderNumber: result.order_number });
+    await finishOrder(orderFromSaved(saved.order));
+  } catch (error) {
+    showPaymentProblem(error.message || "Checkout failed. Please try again.");
+  }
 });
+
+async function handlePaymentReturn() {
+  const parameters = new URLSearchParams(window.location.search);
+  const reference = parameters.get("reference");
+  if (!reference || !/^APX-[a-f0-9]{24}$/.test(reference)) return;
+  try {
+    const result = await invokeCheckout({ action: "verify", reference });
+    if (result.status === "payment_failed") {
+      throw new Error("Payment was not completed. No order was marked paid. You can return to your bag and try again.");
+    }
+    if (result.status !== "paid") throw new Error("Payment is still processing. Refresh to check again; please do not place another order yet.");
+    if (!checkoutDialog.open) openDialog(checkoutDialog);
+    await finishOrder(orderFromSaved(result.order));
+    parameters.delete("reference");
+    parameters.delete("trxref");
+    const remaining = parameters.toString();
+    window.history.replaceState({}, "", `${window.location.pathname}${remaining ? `?${remaining}` : ""}`);
+  } catch (error) {
+    if (!checkoutDialog.open) openDialog(checkoutDialog);
+    showCheckoutView("form");
+    showPaymentProblem(error.message || "Could not verify payment. Refresh to try again.");
+    placeOrderButton.disabled = true;
+  }
+}
 
 /* ==========================================================
    Navigation
@@ -1618,6 +1841,9 @@ document.addEventListener("click", (event) => {
 
 function updateHeaderState() {
   siteHeader.classList.toggle("is-scrolled", window.scrollY > 8);
+  if (mainNavigation.classList.contains("is-open")) {
+    setMenuOpen(false);
+  }
 }
 
 window.addEventListener("scroll", updateHeaderState, { passive: true });
@@ -1691,11 +1917,23 @@ function setUpScrollEffects() {
    ========================================================== */
 
 setUpStoreDetails();
-reconcileShoppingBag();
+handlePaymentReturn();
+if (bagClient) {
+  bagClient.from("delivery_rates").select("state, city_lga, fee_naira").then(({ data, error }) => {
+    if (error) return;
+    deliveryRates = data || [];
+    renderBag();
+    renderCheckoutSummary();
+  });
+}
+if (!catalogueUnavailable) reconcileShoppingBag();
 renderCategoryFilters();
 renderProducts();
 renderNewArrivals();
 renderBag();
+if (catalogueUnavailable) {
+  noProductsMessage.textContent = "The collection is temporarily unavailable. Please try again shortly.";
+}
 setShopView(pageIsShop, { scroll: false, animate: false });
 if (pageIsShop) {
   const parameters = new URLSearchParams(window.location.search);

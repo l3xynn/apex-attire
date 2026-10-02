@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account | APEX ATTIRE</title>
+  <meta name="description" content="Sign in or create your APEX ATTIRE account.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=28">
+</head>
+<body class="account-page">
+  <header class="account-header">
+    <a class="brand-logo" href="index.html">APEX ATTIRE</a>
+    <a href="shop.html">Back to shop</a>
+  </header>
+
+  <main class="account-main">
+    <section class="account-card" aria-labelledby="account-title">
+      <div class="account-card-top">
+        <p class="eyebrow">YOUR SPACE / APEX ATTIRE</p>
+        <h1 id="account-title">Your account, your way.</h1>
+        <p>One place for the pieces you save and the fits you come back for.</p>
+      </div>
+
+      <div class="account-tabs" role="group" aria-label="Account action">
+        <button class="account-tab is-active" type="button" data-mode="sign-in" aria-pressed="true">Sign in</button>
+        <button class="account-tab" type="button" data-mode="sign-up" aria-pressed="false">Create account</button>
+      </div>
+
+      <form class="account-form">
+        <h2 class="account-form-title">Welcome back</h2>
+        <p class="account-form-intro">Sign in and get straight back to the shop.</p>
+
+        <div class="account-signup-fields" hidden>
+          <div class="account-form-section">
+            <p class="account-step">01 / YOUR DETAILS</p>
+            <label for="signup-name">Full name</label>
+            <input id="signup-name" name="fullName" type="text" autocomplete="name" maxlength="120" required>
+            <label for="signup-phone">Phone number</label>
+            <input id="signup-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="080… or +234…" maxlength="30" required>
+          </div>
+          <div class="account-form-section">
+            <p class="account-step">02 / DELIVERY ADDRESS</p>
+            <p class="account-field-note">We’ll save this for when ordering opens. Pickup remains an option.</p>
+            <label for="signup-address-label">Address label</label>
+            <input id="signup-address-label" name="addressLabel" type="text" placeholder="Home or work" maxlength="60" required>
+            <label for="signup-line1">Street address</label>
+            <input id="signup-line1" name="addressLine1" type="text" autocomplete="address-line1" maxlength="200" required>
+            <label for="signup-line2">Apartment or landmark <span>(optional)</span></label>
+            <input id="signup-line2" name="addressLine2" type="text" autocomplete="address-line2" maxlength="200">
+            <div class="address-row">
+              <div><label for="signup-city">City or LGA</label><input id="signup-city" name="city" type="text" autocomplete="address-level2" maxlength="100" required></div>
+              <div><label for="signup-state">State</label><select id="signup-state" name="state" autocomplete="address-level1" required><option value="">Choose a state</option></select></div>
+            </div>
+            <label for="signup-postcode">Postal code <span>(optional)</span></label>
+            <input id="signup-postcode" name="postalCode" type="text" autocomplete="postal-code" maxlength="20">
+          </div>
+          <p class="account-step account-credentials-step">03 / SECURE ACCESS</p>
+        </div>
+
+        <label for="account-email">Email address</label>
+        <input id="account-email" name="email" type="email" autocomplete="email" required>
+        <label for="account-password">Password</label>
+        <div class="account-password-field">
+          <input id="account-password" name="password" type="password" autocomplete="current-password" minlength="6" required>
+          <button class="account-password-toggle" type="button" aria-controls="account-password" aria-label="Show password" aria-pressed="false" hidden>Show</button>
+        </div>
+        <div class="account-confirm-field" hidden>
+          <label for="account-confirm-password">Confirm password</label>
+          <div class="account-password-field">
+            <input id="account-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="6" required>
+            <button class="account-password-toggle" type="button" aria-controls="account-confirm-password" aria-label="Show confirm password" aria-pressed="false" hidden>Show</button>
+          </div>
+        </div>
+        <button class="account-forgot-password" type="button">Forgot password?</button>
+        <button class="button button-primary account-submit" type="submit">Sign in</button>
+      </form>
+
+      <form class="account-form account-recovery-request" hidden>
+        <h2>Reset your password</h2>
+        <p class="account-form-intro">Enter your account email. We’ll send you a link to choose a new password.</p>
+        <label for="recovery-email">Email address</label>
+        <input id="recovery-email" name="email" type="email" autocomplete="email" required>
+        <button class="button button-primary account-submit" type="submit">Send reset link</button>
+        <button class="account-back-to-sign-in" type="button">Back to sign in</button>
+      </form>
+
+      <form class="account-form account-recovery-update" hidden>
+        <h2>Choose a new password</h2>
+        <p class="account-form-intro">Your reset link is verified. Enter your new password below.</p>
+        <label for="recovery-password">New password</label>
+        <div class="account-password-field">
+          <input id="recovery-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+          <button class="account-password-toggle" type="button" aria-controls="recovery-password" aria-label="Show new password" aria-pressed="false" hidden>Show</button>
+        </div>
+        <label for="recovery-confirm-password">Confirm new password</label>
+        <div class="account-password-field">
+          <input id="recovery-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required>
+          <button class="account-password-toggle" type="button" aria-controls="recovery-confirm-password" aria-label="Show confirm new password" aria-pressed="false" hidden>Show</button>
+        </div>
+        <button class="button button-primary account-submit" type="submit">Update password</button>
+      </form>
+
+      <p class="account-message" role="status" aria-live="polite" hidden></p>
+
+      <div class="account-signed-in" hidden>
+        <div class="account-hub-heading">
+          <div><p class="account-step">YOUR ACCOUNT</p><h2>Your details.</h2></div>
+          <a class="admin-account-link" href="admin.html" target="_top" hidden>Switch to store dashboard <span aria-hidden="true">↗</span></a>
+        </div>
+        <p class="account-details-status" role="status" aria-live="polite"></p>
+        <div class="account-information">
+          <section class="account-info-section" aria-labelledby="account-personal-title">
+            <div class="account-info-heading"><h3 id="account-personal-title">Personal information</h3><button class="account-edit-profile" type="button">Edit</button></div>
+            <dl class="account-info-list">
+              <div><dt>Full name</dt><dd class="account-name-display">—</dd></div>
+              <div><dt>Email</dt><dd class="account-email-display">—</dd></div>
+              <div><dt>Phone</dt><dd class="account-phone-display">—</dd></div>
+            </dl>
+            <form class="account-profile-form account-edit-form" hidden>
+              <label for="profile-name">Full name</label>
+              <input id="profile-name" name="fullName" type="text" autocomplete="name" maxlength="120" required>
+              <label for="profile-phone">Phone number</label>
+              <input id="profile-phone" name="phone" type="tel" autocomplete="tel" maxlength="30" required>
+              <div class="account-form-actions"><button class="button button-primary" type="submit">Save details</button><button class="button button-secondary account-cancel-profile" type="button">Cancel</button></div>
+            </form>
+          </section>
+          <section class="account-info-section" aria-labelledby="account-addresses-title">
+            <div class="account-info-heading"><h3 id="account-addresses-title">Delivery addresses</h3><button class="account-add-address" type="button">Add address</button></div>
+            <p class="account-address-empty" hidden>No address saved yet. Add one for when ordering opens.</p>
+            <div class="account-address-list"></div>
+            <form class="account-address-form account-edit-form" hidden>
+              <label for="account-address-label">Address label</label>
+              <input id="account-address-label" name="label" type="text" placeholder="Home or work" maxlength="60" required>
+              <label for="account-address-line1">Street address</label>
+              <input id="account-address-line1" name="addressLine1" type="text" autocomplete="address-line1" maxlength="200" required>
+              <label for="account-address-line2">Apartment or landmark <span>(optional)</span></label>
+              <input id="account-address-line2" name="addressLine2" type="text" autocomplete="address-line2" maxlength="200">
+              <div class="address-row">
+                <div><label for="account-address-city">City or LGA</label><input id="account-address-city" name="city" type="text" autocomplete="address-level2" maxlength="100" required></div>
+                <div><label for="account-address-state">State</label><select id="account-address-state" name="state" autocomplete="address-level1" required><option value="">Choose a state</option></select></div>
+              </div>
+              <label for="account-address-postcode">Postal code <span>(optional)</span></label>
+              <input id="account-address-postcode" name="postalCode" type="text" autocomplete="postal-code" maxlength="20">
+              <div class="account-form-actions"><button class="button button-primary" type="submit">Save address</button><button class="button button-secondary account-cancel-address" type="button">Cancel</button></div>
+            </form>
+          </section>
+        </div>
+        <div class="account-signed-actions">
+          <button class="button button-primary account-retry-setup" type="button" hidden>Finish account setup</button>
+          <button class="button button-secondary account-sign-out" type="button">Sign out</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="account-footer">© APEX ATTIRE — Lagos, Nigeria</footer>
+  <script src="store-config.js?v=4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="account.js?v=8"></script>
+</body>
+</html>

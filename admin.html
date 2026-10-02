@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin | APEX ATTIRE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=32">
+</head>
+<body class="account-page admin-page">
+  <header class="account-header admin-site-header">
+    <a class="brand-logo" href="index.html">APEX ATTIRE <span>STUDIO</span></a>
+    <a href="shop.html">View storefront <span aria-hidden="true">↗</span></a>
+  </header>
+  <main class="admin-main">
+    <section class="account-card admin-gate" aria-live="polite">
+      <h2>Checking access…</h2>
+      <p>Please wait while we verify your account.</p>
+    </section>
+    <section class="admin-dashboard" hidden>
+      <aside class="admin-sidebar" aria-label="Dashboard navigation">
+        <div class="admin-sidebar-brand"><span class="admin-sidebar-monogram">A</span><div><strong>APEX ATTIRE</strong><small>STORE CONTROL</small></div></div>
+        <p class="admin-nav-label">WORKSPACE</p>
+        <nav class="admin-side-nav" aria-label="Admin sections">
+          <a href="#admin-overview"><span>01</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"/></svg> Overview</a>
+          <a href="#admin-products"><span>02</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v4H4zM4 12h16v7H4z"/></svg> Products</a>
+          <a href="#admin-categories"><span>03</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 7 9-4 9 4-9 4-9-4Zm0 5 9 4 9-4M3 17l9 4 9-4"/></svg> Categories</a>
+          <a href="#admin-delivery"><span>04</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7M7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM18 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg> Rates</a>
+          <a href="#admin-orders"><span>05</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16l-1 14H5L4 7ZM8 8V6a4 4 0 0 1 8 0v2"/></svg> Orders</a>
+          <a href="#admin-analytics"><span>06</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V12M10 20V4M16 20v-9M22 20v-5"/></svg> Analytics</a>
+        </nav>
+        <div class="admin-sidebar-footer"><span class="admin-online-dot"></span> Catalogue workspace<br><small>Checkout stays closed</small></div>
+      </aside>
+      <div class="admin-workspace">
+      <div class="admin-workspace-top"><span>APEX ATTIRE / CONTROL ROOM</span><span class="admin-checkout-badge">CHECKOUT OFFLINE</span></div>
+      <div class="admin-welcome" id="admin-overview">
+        <div><p class="eyebrow">OVERVIEW</p><h1>Good to have you here.</h1><p>Everything behind the collection, in one place.</p><small class="admin-email"></small></div>
+        <button class="button button-secondary admin-sign-out" type="button">Sign out</button>
+      </div>
+      <div class="admin-grid">
+        <a class="admin-panel" href="#admin-products">
+          <p class="eyebrow">CATALOGUE</p>
+          <strong class="admin-product-count">—</strong>
+          <span>Active products</span>
+          <span class="admin-card-arrow" aria-hidden="true">↗</span>
+        </a>
+        <a class="admin-panel" href="#admin-categories">
+          <p class="eyebrow">NAVIGATION</p>
+          <strong class="admin-category-count">—</strong>
+          <span>Categories</span>
+          <span class="admin-card-arrow" aria-hidden="true">↗</span>
+        </a>
+        <a class="admin-panel" href="#admin-analytics">
+          <p class="eyebrow">TRAFFIC / TODAY</p>
+          <strong class="admin-views-today">—</strong>
+          <span>Page views</span>
+          <span class="admin-card-arrow" aria-hidden="true">↗</span>
+        </a>
+        <a class="admin-panel" href="#admin-orders">
+          <p class="eyebrow">SALES</p>
+          <strong class="admin-order-count">—</strong>
+          <span>Recent orders</span>
+          <span class="admin-card-arrow" aria-hidden="true">↗</span>
+        </a>
+      </div>
+      <section class="admin-section" id="admin-products">
+        <div class="admin-section-heading"><div><p class="eyebrow">CATALOGUE / 01</p><h2>Products</h2><p>Make a change here. Your next storefront refresh will reflect it.</p></div><button class="button button-primary admin-new-product" type="button">Add product</button></div>
+        <p class="admin-status" role="status" aria-live="polite" hidden></p>
+        <label class="admin-search-label" for="admin-product-search">Find a product</label>
+        <input class="admin-product-search" id="admin-product-search" type="search" placeholder="Search products by name or category">
+        <div class="admin-product-list"></div>
+        <form class="admin-product-form admin-editor" hidden>
+          <h3 class="admin-form-title">Add product</h3>
+          <details class="admin-editor-section" data-section="essentials" open>
+            <summary><span>01</span> Product details</summary>
+            <div class="admin-editor-section-body">
+              <div class="admin-form-grid">
+                <label>Product name<input name="name" maxlength="120" required></label>
+                <label>Category<select name="category" required></select></label>
+                <label>Price in naira<input name="price" type="number" min="1" step="1" required></label>
+                <label>Sizes, separated by commas<input name="sizes" placeholder="S, M, L, XL" required></label>
+              </div>
+              <label>Description<textarea name="description" rows="3" maxlength="600" required></textarea></label>
+            </div>
+          </details>
+          <details class="admin-editor-section" data-section="availability" open>
+            <summary><span>02</span> Visibility &amp; stock</summary>
+            <div class="admin-editor-section-body admin-checks">
+              <label><input name="bestSeller" type="checkbox"> Show on homepage</label>
+              <label><input name="newArrival" type="checkbox"> New arrival</label>
+              <label><input name="soldOut" type="checkbox"> Sold out (entire product)</label>
+            </div>
+          </details>
+          <details class="admin-editor-section" data-section="colours" open>
+            <summary><span>03</span> Colours &amp; photos</summary>
+            <div class="admin-editor-section-body">
+              <p>Use up to 8 JPG, PNG, WebP or AVIF photos per colour, 8 MB each. The first photo appears in the grid.</p>
+              <div class="admin-colour-list"></div>
+              <button class="button button-secondary admin-add-colour" type="button">Add colour</button>
+            </div>
+          </details>
+          <div class="admin-form-actions"><button class="button button-primary admin-save-product" type="submit">Save product</button><button class="button button-secondary admin-cancel-edit" type="button">Cancel</button></div>
+        </form>
+      </section>
+      <section class="admin-section" id="admin-categories">
+        <p class="eyebrow">NAVIGATION / 02</p><h2>Categories</h2>
+        <p>New categories appear in the shop filters. The homepage image tiles remain curated separately.</p>
+        <p class="admin-category-status admin-status" role="status" aria-live="polite" hidden></p>
+        <form class="admin-category-form admin-form-actions"><label>Category name<input name="label" maxlength="60" required></label><button class="button button-primary" type="submit">Add category</button></form>
+        <div class="admin-category-list"></div>
+      </section>
+      <section class="admin-section" id="admin-delivery">
+        <p class="eyebrow">FULFILMENT / 04</p><h2>Delivery rates</h2>
+        <p>Set a state-wide rate, then add city or LGA overrides where needed. A city override takes priority. Locations without a matching rate cannot proceed to online payment.</p>
+        <p class="admin-delivery-status admin-status" role="status" aria-live="polite" hidden></p>
+        <form class="admin-delivery-form admin-form-grid">
+          <label>State<select name="state" required><option value="">Choose a state</option></select></label>
+          <label>City / LGA <span class="optional">(leave blank for state-wide)</span><input name="city" maxlength="100" placeholder="All other locations in this state"></label>
+          <label>Fee in naira<input name="fee" type="number" min="0" step="1" required></label>
+          <button class="button button-primary" type="submit">Save rate</button>
+        </form>
+        <div class="admin-delivery-list"></div>
+      </section>
+      <section class="admin-section" id="admin-orders">
+        <p class="eyebrow">SALES / 05</p><h2>Orders</h2>
+        <p>Review payments, customer notes and fulfilment. Test orders cannot be fulfilled. Cancelling a paid order does not issue a refund.</p>
+        <button class="button button-secondary admin-refresh-orders" type="button">Refresh orders</button>
+        <label class="admin-orders-filter">Show orders
+          <select><option value="live">Live orders</option><option value="test">Test orders</option><option value="all">All orders</option></select>
+        </label>
+        <p class="admin-orders-status" role="status" aria-live="polite"></p>
+        <div class="admin-orders-list"></div>
+      </section>
+      <section class="admin-section" id="admin-analytics">
+        <p class="eyebrow">INSIGHTS / 06</p><h2>Page views</h2>
+        <p>Counts start after the updated storefront goes live. They are page loads, not unique people, and may include repeat visits.</p>
+        <div class="admin-metrics"><div><strong class="admin-views-today-detail">—</strong><span>Today</span></div><div><strong class="admin-views-month">—</strong><span>Last 30 days</span></div></div>
+        <button class="button button-secondary admin-refresh-analytics" type="button">Refresh counts</button>
+        <p class="admin-analytics-status" role="status" aria-live="polite"></p>
+      </section>
+      </div>
+    </section>
+  </main>
+  <footer class="account-footer">© APEX ATTIRE — Lagos, Nigeria</footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="products.js?v=5"></script>
+  <script src="store-config.js?v=5"></script>
+  <script src="admin.js?v=7"></script>
+</body>
+</html>

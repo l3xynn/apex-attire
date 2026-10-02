@@ -7,7 +7,6 @@ const storeConfig = {
 
   currency: "NGN",
   currencySymbol: "₦",
-  lagosDeliveryFee: 2500,
   lagosDeliveryTime: "1–3 business days",
   nationwideDeliveryTime: "3–5 business days",
   pickupAvailable: true,

@@ -1,138 +1,195 @@
 const BAG_STORAGE_KEY = "apex-attire-bag";
+const MAX_ITEM_QUANTITY = storeConfig.maxQuantityPerItem || 10;
+const shoppingBag = [];
+const bagClient = window.supabase?.createClient(
+  "https://fzepfojrtalfayimnsnp.supabase.co",
+  "sb_publishable_h0Kp4nIXdZkDePlB2JToqA_Us6h6OGt"
+);
 
-const MAX_ITEM_QUANTITY =
-  (typeof storeConfig !== "undefined" && storeConfig.maxQuantityPerItem) || 10;
+let bagUserId = null;
+let bagSessionUserId = null;
+let bagAuthState = "loading";
+let bagAuthError = "";
+let bagLoadVersion = 0;
 
-function isValidBagItem(bagItem) {
-  return (
-    bagItem &&
-    typeof bagItem.id === "string" &&
-    typeof bagItem.name === "string" &&
-    typeof bagItem.image === "string" &&
-    typeof bagItem.size === "string" &&
-    Number.isFinite(bagItem.price) &&
-    Number.isInteger(bagItem.quantity) &&
-    bagItem.quantity > 0 &&
-    bagItem.quantity <= MAX_ITEM_QUANTITY
-  );
+try {
+  localStorage.removeItem(BAG_STORAGE_KEY);
+} catch {
 }
 
-function loadShoppingBag() {
-  try {
-    const storedBag = localStorage.getItem(BAG_STORAGE_KEY);
-
-    if (!storedBag) {
-      return [];
-    }
-
-    const parsedBag = JSON.parse(storedBag);
-
-    return Array.isArray(parsedBag) ? parsedBag.filter(isValidBagItem) : [];
-  } catch {
-    return [];
-  }
+function notifyBagChanged() {
+  window.dispatchEvent(new Event("bag-change"));
 }
 
-const shoppingBag = loadShoppingBag();
-
-// Re-read the bag from storage (used when another tab changes it)
-function refreshShoppingBag() {
-  shoppingBag.splice(0, shoppingBag.length, ...loadShoppingBag());
+function getBagAccessState() {
+  return bagAuthState;
 }
 
-function saveShoppingBag() {
-  try {
-    localStorage.setItem(BAG_STORAGE_KEY, JSON.stringify(shoppingBag));
-  } catch {
-    // Storage can be blocked (private mode, full storage). The bag still
-    // works for this visit, it just won't be remembered.
-  }
+function getBagAccessError() {
+  return bagAuthError;
 }
 
-// Two bag lines are "the same" only if they share an id, a size AND a colour.
-// Products with no colour choice pass an empty colour, which still matches
-// correctly since both sides fall back to "".
 function isSameBagItem(bagItem, id, size, colour) {
-  return (
-    bagItem.id === id &&
-    bagItem.size === size &&
-    (bagItem.colour || "") === (colour || "")
-  );
+  return bagItem.id === id && bagItem.size === size &&
+    (bagItem.colour || "") === (colour || "");
 }
 
-// Returns true if the item was added, false if the quantity limit was hit
-function addItemToBag(product) {
-  const matchingItem = shoppingBag.find((bagItem) =>
-    isSameBagItem(bagItem, product.id, product.size, product.colour)
-  );
+async function loadShoppingBag(userId, version) {
+  const { data, error } = await bagClient.from("saved_bag_items")
+    .select("product_id, size, colour, quantity")
+    .eq("user_id", userId);
 
-  if (matchingItem) {
-    if (matchingItem.quantity >= MAX_ITEM_QUANTITY) {
-      return false;
-    }
-
-    matchingItem.quantity += 1;
-    saveShoppingBag();
-    return true;
+  if (version !== bagLoadVersion) return;
+  if (error) {
+    bagAuthState = "error";
+    bagAuthError = "Your saved bag could not load. Please try again later.";
+    notifyBagChanged();
+    return;
   }
 
-  shoppingBag.push({
-    ...product,
-    quantity: 1
-  });
+  shoppingBag.splice(0, shoppingBag.length, ...(data || []).map((item) => ({
+    id: item.product_id,
+    size: item.size,
+    colour: item.colour,
+    quantity: item.quantity,
+    name: "",
+    image: "",
+    price: 0
+  })));
+  bagUserId = userId;
+  bagAuthState = "ready";
+  bagAuthError = "";
+  notifyBagChanged();
+}
 
-  saveShoppingBag();
+async function setBagSession(session) {
+  const nextUserId = session?.user?.id || null;
+  if (nextUserId === bagSessionUserId && (
+    nextUserId ? bagAuthState === "loading" || bagAuthState === "ready"
+      : bagAuthState === "signed-out"
+  )) {
+    return;
+  }
+
+  bagSessionUserId = nextUserId;
+  const version = ++bagLoadVersion;
+  bagUserId = null;
+  shoppingBag.splice(0, shoppingBag.length);
+  bagAuthState = nextUserId ? "loading" : "signed-out";
+  bagAuthError = "";
+  notifyBagChanged();
+
+  if (!nextUserId) return;
+
+  const { data, error } = await bagClient.auth.getUser();
+  if (version !== bagLoadVersion) return;
+  if (error || data?.user?.id !== nextUserId) {
+    bagSessionUserId = null;
+    bagAuthState = "signed-out";
+    notifyBagChanged();
+    return;
+  }
+
+  await loadShoppingBag(nextUserId, version);
+}
+
+async function refreshShoppingBag() {
+  if (bagAuthState !== "ready" || !bagUserId) return;
+  await loadShoppingBag(bagUserId, bagLoadVersion);
+}
+
+function requireBagAccount() {
+  if (bagAuthState !== "ready" || !bagUserId) {
+    throw new Error("Sign in to save items to your bag.");
+  }
+  return bagUserId;
+}
+
+async function addItemToBag(product) {
+  const userId = requireBagAccount();
+  const matchingItem = shoppingBag.find((item) =>
+    isSameBagItem(item, product.id, product.size, product.colour)
+  );
+  if (matchingItem?.quantity >= MAX_ITEM_QUANTITY) return false;
+
+  const quantity = (matchingItem?.quantity || 0) + 1;
+  const { error } = await bagClient.from("saved_bag_items").upsert({
+    user_id: userId,
+    product_id: product.id,
+    size: product.size,
+    colour: product.colour || "",
+    quantity,
+    updated_at: new Date().toISOString()
+  }, { onConflict: "user_id,product_id,size,colour" });
+
+  if (error) throw error;
+  if (bagUserId !== userId) return false;
+  if (matchingItem) {
+    matchingItem.quantity = quantity;
+  } else {
+    shoppingBag.push({ ...product, quantity });
+  }
   return true;
 }
 
-function changeBagItemQuantity(productId, productSize, productColour, quantityChange) {
-  const matchingItem = shoppingBag.find((bagItem) =>
-    isSameBagItem(bagItem, productId, productSize, productColour)
+async function changeBagItemQuantity(productId, productSize, productColour, quantityChange) {
+  const userId = requireBagAccount();
+  const matchingItem = shoppingBag.find((item) =>
+    isSameBagItem(item, productId, productSize, productColour)
   );
+  if (!matchingItem) return;
 
-  if (!matchingItem) {
+  const quantity = Math.min(matchingItem.quantity + quantityChange, MAX_ITEM_QUANTITY);
+  if (quantity <= 0) {
+    await removeBagItem(productId, productSize, productColour);
     return;
   }
 
-  matchingItem.quantity = Math.min(
-    matchingItem.quantity + quantityChange,
-    MAX_ITEM_QUANTITY
-  );
+  const { error } = await bagClient.from("saved_bag_items").update({
+    quantity,
+    updated_at: new Date().toISOString()
+  }).eq("user_id", userId).eq("product_id", productId)
+    .eq("size", productSize).eq("colour", productColour || "");
 
-  if (matchingItem.quantity <= 0) {
-    removeBagItem(productId, productSize, productColour);
-    return;
-  }
-
-  saveShoppingBag();
+  if (error) throw error;
+  if (bagUserId === userId) matchingItem.quantity = quantity;
 }
 
-function removeBagItem(productId, productSize, productColour) {
-  const itemIndex = shoppingBag.findIndex((bagItem) =>
-    isSameBagItem(bagItem, productId, productSize, productColour)
+async function removeBagItem(productId, productSize, productColour) {
+  const userId = requireBagAccount();
+  const { error } = await bagClient.from("saved_bag_items").delete()
+    .eq("user_id", userId).eq("product_id", productId)
+    .eq("size", productSize).eq("colour", productColour || "");
+
+  if (error) throw error;
+  if (bagUserId !== userId) return;
+  const index = shoppingBag.findIndex((item) =>
+    isSameBagItem(item, productId, productSize, productColour)
   );
-
-  if (itemIndex === -1) {
-    return;
-  }
-
-  shoppingBag.splice(itemIndex, 1);
-  saveShoppingBag();
+  if (index !== -1) shoppingBag.splice(index, 1);
 }
 
-function clearShoppingBag() {
-  shoppingBag.splice(0, shoppingBag.length);
-  saveShoppingBag();
+async function clearShoppingBag() {
+  const userId = requireBagAccount();
+  const { error } = await bagClient.from("saved_bag_items").delete().eq("user_id", userId);
+  if (error) throw error;
+  if (bagUserId === userId) shoppingBag.splice(0, shoppingBag.length);
 }
 
 function getBagItemCount() {
-  return shoppingBag.reduce((total, bagItem) => {
-    return total + bagItem.quantity;
-  }, 0);
+  return shoppingBag.reduce((total, item) => total + item.quantity, 0);
 }
 
 function getBagSubtotal() {
-  return shoppingBag.reduce((total, bagItem) => {
-    return total + bagItem.price * bagItem.quantity;
-  }, 0);
+  return shoppingBag.reduce((total, item) => total + item.price * item.quantity, 0);
+}
+
+if (bagClient) {
+  bagClient.auth.onAuthStateChange((_event, session) => {
+    setTimeout(() => setBagSession(session), 0);
+  });
+  window.addEventListener("focus", refreshShoppingBag);
+} else {
+  bagAuthState = "error";
+  bagAuthError = "Account service could not load. Please check your connection and refresh.";
 }
