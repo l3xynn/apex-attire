@@ -62,7 +62,7 @@ const products = [
     description: "No big graphic, no extra noise. A plain tee for the days you want to keep the fit simple.",
     sizes: ["S", "M", "L", "XL"],
     colour: "Green",
-    image: "images/4 Tees.jpg",
+    image: "images/4 tees.jpg",
     imageAlt: "Green APEX ATTIRE regular plain T-shirt"
   },
   {
