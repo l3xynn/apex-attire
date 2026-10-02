@@ -380,7 +380,7 @@ const catalogueAdditions = [
   ["Low-Top City Sneakers", "shoes", 27500, "low-top city sneakers.jpg"],
   ["Retro Runner", "shoes", 29500, "retro runner.jpg"],
   ["Classic Court Sneaker", "shoes", 26500, "classic court sneaker.jpg"],
-  ["Canvas Daily Tote", "totes", 8500, "graphic tote.jpg"],
+  ["Canvas Daily Tote", "totes", 8500, "Graphic tote.jpg"],
   ["Everyday Baseball Cap", "caps", 6500, "everyday baseball cap.jpg"],
   ["Minimal Chain", "jewellery", 9500, "minimal chain.jpg"],
   ["Stacking Ring Set", "jewellery", 8000, "stacking ring set.jpg"],
