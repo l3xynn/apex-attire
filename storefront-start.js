@@ -1,6 +1,6 @@
 function startStorefront() {
   const script = document.createElement("script");
-  script.src = "script.js?v=14";
+  script.src = "script.js?v=15";
   document.body.append(script);
 }
 

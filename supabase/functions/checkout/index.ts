@@ -104,6 +104,13 @@ async function deliveryFee(admin: ReturnType<typeof getAdminClient>, fulfilment:
 
 async function startCheckout(admin: ReturnType<typeof getAdminClient>, user: { id: string; email?: string }, body: Record<string, unknown>, origin: string) {
   if (Deno.env.get("ORDERING_ENABLED") !== "true") throw new CheckoutError("Online ordering is not open yet.", 503);
+  if (Deno.env.get("ORDERING_TEST_MODE") !== "true" || !getPaystackSecret().startsWith("sk_test_")) {
+    throw new CheckoutError("Only test checkout is available.", 503);
+  }
+  const expiresAt = Date.parse(Deno.env.get("ORDERING_TEST_EXPIRES_AT") || "");
+  if (!Number.isFinite(expiresAt) || Date.now() >= expiresAt) {
+    throw new CheckoutError("The test checkout window has closed.", 503);
+  }
   const fulfilment = cleanText(body.fulfilment, 20);
   const payment = cleanText(body.payment, 20);
   const customer = typeof body.customer === "object" && body.customer !== null
@@ -120,6 +127,7 @@ async function startCheckout(admin: ReturnType<typeof getAdminClient>, user: { i
   if (!["delivery", "pickup"].includes(fulfilment) || !["paystack", "cod"].includes(payment)) {
     throw new CheckoutError("Choose a valid fulfilment and payment method.");
   }
+  if (payment === "cod") throw new CheckoutError("Pay on delivery is unavailable during the demo.");
   if (fulfilment === "delivery" && (!state || city.length < 2 || city.length > 100 || address.length < 6 || address.length > 240)) {
     throw new CheckoutError("Enter a complete delivery location and address.");
   }

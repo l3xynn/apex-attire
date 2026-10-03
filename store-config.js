@@ -1,6 +1,8 @@
 const storeConfig = {
   // Orders stay closed until a verified server-side checkout is connected.
   orderingEnabled: false,
+  demoMode: true,
+  demoEndsAt: "",
 
   // Shown in the black bar at the top. Set to "" to hide it.
   announcement: "Browse now. Online checkout opens soon.",

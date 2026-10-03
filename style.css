@@ -2548,6 +2548,7 @@ h1 {
 .header-search-wrap.is-expanded {
   width: clamp(44px, calc(100% - 174px), 280px);
 }
+.checkout-demo-notice { padding: 12px 14px; border: 1px solid var(--deep-red); color: var(--deep-red); font-size: 0.85rem; line-height: 1.5; }
 
 .admin-page .admin-main {
   display: block;

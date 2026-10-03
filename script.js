@@ -357,9 +357,23 @@ function closeDialog(dialog) {
    ========================================================== */
 
 function setUpStoreDetails() {
-  if (storeConfig.announcement) {
-    announcementText.textContent = storeConfig.announcement;
+  const announcement = storeConfig.demoMode && storeConfig.orderingEnabled
+    ? isOrderingOpen()
+      ? "DEMO CHECKOUT — test payments only. No real orders or deliveries."
+      : "Demo checkout has ended. Browse the collection."
+    : storeConfig.announcement;
+  if (announcement) {
+    announcementText.textContent = announcement;
     announcementBar.hidden = false;
+  }
+  if (storeConfig.demoMode && storeConfig.orderingEnabled) {
+    const expiresAt = Date.parse(storeConfig.demoEndsAt || "");
+    if (Number.isFinite(expiresAt) && expiresAt > Date.now()) {
+      setTimeout(() => {
+        announcementText.textContent = "Demo checkout has ended. Browse the collection.";
+        updateCheckoutButton();
+      }, expiresAt - Date.now() + 100);
+    }
   }
 
   dialogPolicy.textContent = "Nationwide delivery · Fee calculated by state and city/LGA at checkout.";
@@ -1171,12 +1185,22 @@ function openBag() {
   openDialog(bagDialog);
 }
 
+function isOrderingOpen() {
+  if (!storeConfig.orderingEnabled) return false;
+  if (!storeConfig.demoMode) return true;
+  const expiresAt = Date.parse(storeConfig.demoEndsAt || "");
+  return Number.isFinite(expiresAt) && Date.now() < expiresAt;
+}
+
 function updateCheckoutButton() {
-  checkoutButton.disabled = !storeConfig.orderingEnabled || getBagAccessState() !== "ready" ||
+  checkoutButton.disabled = !isOrderingOpen() || getBagAccessState() !== "ready" ||
     shoppingBag.length === 0 || catalogueUnavailable;
-  checkoutButton.textContent = storeConfig.orderingEnabled ? "Continue to checkout" : "Online ordering opens soon";
-  document.querySelector(".bag-save-note").textContent = storeConfig.orderingEnabled
-    ? "Your picks are saved to your account. Delivery is calculated before payment."
+  checkoutButton.textContent = isOrderingOpen()
+    ? storeConfig.demoMode ? "Try demo checkout" : "Continue to checkout"
+    : storeConfig.demoMode && storeConfig.orderingEnabled ? "Demo checkout closed" : "Online ordering opens soon";
+  document.querySelector(".bag-save-note").textContent = isOrderingOpen()
+    ? storeConfig.demoMode ? "Demo only. No real payment, order fulfilment or delivery."
+      : "Your picks are saved to your account. Delivery is calculated before payment."
     : "Your picks are saved to your account. Online checkout is not open yet.";
 }
 
@@ -1545,7 +1569,9 @@ function setDefaultPayment() {
 function updatePaymentUI() {
   emailOptionalLabel.hidden = true;
   const codRadio = checkoutForm.querySelector('input[name="payment"][value="cod"]');
-  codRadio.disabled = selectedFulfilment === "delivery" && areaSelect.value !== "Lagos";
+  codRadio.closest("label").hidden = Boolean(storeConfig.demoMode);
+  codRadio.disabled = Boolean(storeConfig.demoMode) ||
+    selectedFulfilment === "delivery" && areaSelect.value !== "Lagos";
   if (codRadio.disabled && codRadio.checked) setDefaultPayment();
   paymentError.hidden = true;
 
@@ -1585,6 +1611,7 @@ async function openCheckout() {
     return;
   }
   emailInput.value = data.user.email;
+  checkoutDialog.querySelector(".checkout-demo-notice").hidden = !storeConfig.demoMode;
 
   clearCheckoutErrors();
   showCheckoutView("form");
@@ -1598,6 +1625,7 @@ async function openCheckout() {
 }
 
 function getNextStepsText(order) {
+  if (storeConfig.demoMode) return "Demo complete. No payment was collected and nothing will be shipped.";
   const phone = order.customer.phone;
 
   if (order.payment === "paystack") {
@@ -1616,7 +1644,9 @@ function getNextStepsText(order) {
 function renderSuccess(order) {
   const firstName = order.customer.name.split(" ")[0];
 
-  successMessage.textContent = `Thanks, ${firstName}. Your order has been received.`;
+  successMessage.textContent = storeConfig.demoMode
+    ? `Thanks, ${firstName}. Your demo order was recorded; nothing will be delivered.`
+    : `Thanks, ${firstName}. Your order has been received.`;
   successOrderNumber.textContent = order.number;
 
   renderOrderLines(successItems, order.items);
@@ -1628,7 +1658,7 @@ function renderSuccess(order) {
 
   successFulfilment.textContent =
     order.fulfilment === "delivery" ? `Delivery · ${order.customer.city}, ${order.customer.area}` : "Pickup";
-  successPayment.textContent = PAYMENT_LABELS[order.payment];
+  successPayment.textContent = storeConfig.demoMode ? "Paystack test payment" : PAYMENT_LABELS[order.payment];
   successReferenceRow.hidden = !order.paymentReference;
   successReference.textContent = order.paymentReference || "";
   successPhone.textContent = order.customer.phone;
@@ -1757,7 +1787,12 @@ checkoutDialog.addEventListener("close", () => {
 
 checkoutForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (!storeConfig.orderingEnabled || isPlacingOrder || !validateCheckoutForm()) return;
+  if (!isOrderingOpen()) {
+    showPaymentProblem("The demo checkout window has closed.");
+    updateCheckoutButton();
+    return;
+  }
+  if (isPlacingOrder || !validateCheckoutForm()) return;
   if (getOrderTotals().deliveryFee === null) {
     showPaymentProblem("Choose a location with a confirmed delivery fee before placing your order.");
     return;
