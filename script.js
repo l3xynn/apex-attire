@@ -357,11 +357,7 @@ function closeDialog(dialog) {
    ========================================================== */
 
 function setUpStoreDetails() {
-  const announcement = storeConfig.demoMode && storeConfig.orderingEnabled
-    ? isOrderingOpen()
-      ? "DEMO CHECKOUT — test payments only. No real orders or deliveries."
-      : "Demo checkout has ended. Browse the collection."
-    : storeConfig.announcement;
+  const announcement = storeConfig.announcement;
   if (announcement) {
     announcementText.textContent = announcement;
     announcementBar.hidden = false;
@@ -370,7 +366,6 @@ function setUpStoreDetails() {
     const expiresAt = Date.parse(storeConfig.demoEndsAt || "");
     if (Number.isFinite(expiresAt) && expiresAt > Date.now()) {
       setTimeout(() => {
-        announcementText.textContent = "Demo checkout has ended. Browse the collection.";
         updateCheckoutButton();
       }, expiresAt - Date.now() + 100);
     }
@@ -1196,12 +1191,11 @@ function updateCheckoutButton() {
   checkoutButton.disabled = !isOrderingOpen() || getBagAccessState() !== "ready" ||
     shoppingBag.length === 0 || catalogueUnavailable;
   checkoutButton.textContent = isOrderingOpen()
-    ? storeConfig.demoMode ? "Try demo checkout" : "Continue to checkout"
-    : storeConfig.demoMode && storeConfig.orderingEnabled ? "Demo checkout closed" : "Online ordering opens soon";
+    ? "Continue to checkout"
+    : "Checkout unavailable";
   document.querySelector(".bag-save-note").textContent = isOrderingOpen()
-    ? storeConfig.demoMode ? "Demo only. No real payment, order fulfilment or delivery."
-      : "Your picks are saved to your account. Delivery is calculated before payment."
-    : "Your picks are saved to your account. Online checkout is not open yet.";
+    ? "Your picks are saved to your account. Delivery is calculated before payment."
+    : "Your picks are saved to your account. Checkout is not available right now.";
 }
 
 function restoreBagFocus(bagItem, action) {
@@ -1625,7 +1619,7 @@ async function openCheckout() {
 }
 
 function getNextStepsText(order) {
-  if (storeConfig.demoMode) return "Demo complete. No payment was collected and nothing will be shipped.";
+  if (storeConfig.demoMode) return "Test checkout complete. No money was collected and nothing will be shipped.";
   const phone = order.customer.phone;
 
   if (order.payment === "paystack") {
@@ -1644,8 +1638,9 @@ function getNextStepsText(order) {
 function renderSuccess(order) {
   const firstName = order.customer.name.split(" ")[0];
 
+  successTitle.textContent = storeConfig.demoMode ? "Checkout preview complete" : "Order placed";
   successMessage.textContent = storeConfig.demoMode
-    ? `Thanks, ${firstName}. Your demo order was recorded; nothing will be delivered.`
+    ? `Thanks, ${firstName}. This was a test order; nothing will be delivered.`
     : `Thanks, ${firstName}. Your order has been received.`;
   successOrderNumber.textContent = order.number;
 
@@ -1788,7 +1783,7 @@ checkoutDialog.addEventListener("close", () => {
 checkoutForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!isOrderingOpen()) {
-    showPaymentProblem("The demo checkout window has closed.");
+    showPaymentProblem("Checkout is not available right now.");
     updateCheckoutButton();
     return;
   }
