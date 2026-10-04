@@ -2,3 +2,6 @@ project_id = "fzepfojrtalfayimnsnp"
 
 [functions.paystack-webhook]
 verify_jwt = false
+
+[functions.record-page-view]
+verify_jwt = false

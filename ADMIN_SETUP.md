@@ -14,13 +14,19 @@ Product images are stored in the public `product-images` bucket. Only the admin 
 
 `catalogue-admin.sql` contains the database schema and policies. It has been applied to the Supabase project. Keep it with the project as the setup record. `admin-access.sql` documents the admin role table; the admin grant itself was applied separately and is not stored in source control.
 
-Public page-view recording is paused because anonymous inserts could be abused. Run `security-hardening.sql` in the Supabase SQL Editor to revoke the old insert access; the dashboard will show historical counts until protected analytics is added. The storefront now hides products if it cannot verify the live catalogue, rather than showing potentially removed or sold-out static items. Ordering remains disabled until the Paystack flow is deployed and tested.
+Public page-view inserts stay revoked because anonymous inserts could be abused. The dashboard can show historical counts until the protected analytics setup below is deployed. The storefront hides products if it cannot verify the live catalogue, rather than showing potentially removed or sold-out static items.
 
 Before relying on a deployment, test as both the admin and a normal customer: add a product, upload more than one photo for a colour, edit price and sizes, mark sold out, remove and restore it, and confirm customers cannot reach the dashboard or write catalogue data.
 
 ## Delivery-rate editor
 
 `delivery-rates.sql` has been applied to the Supabase project. The Rates section lets the admin set a state-wide fee and optional city/LGA overrides. Leave City / LGA blank for the state-wide fee; spell city/LGA names consistently with customer checkout entries. Only the admin can change rates. The checkout preview and server both read published rates. Do not put a Paystack secret key in this repository or the browser.
+
+## Store analytics
+
+Run the contents of `store-analytics.sql` in the Supabase SQL Editor before publishing the updated storefront. It keeps direct public writes to page views revoked and adds an admin-only metrics function. Deploy `record-page-view` with the Supabase CLI (`npx supabase functions deploy record-page-view`), then publish `page-view.js`, the updated HTML, and the dashboard files. The function is public only for recording home/shop page loads; it allows known storefront origins, rejects invalid paths, and stores a daily hash of the visitor IP rather than the raw address. Repeated requests from the same network to the same page within 30 seconds count once. Counts are estimates and can still be affected by bots or blocked requests.
+
+The analytics section shows Lagos-local views today, views over the last 30 days, verified paid non-test orders, and gross revenue from those orders. Test payments never count as money made. Gross revenue is not profit and does not subtract Paystack fees or refunds; those require separate accounting. Until a real Paystack live account is activated, revenue should remain ₦0. Test that two page loads appear in the dashboard after deployment and that a test payment increases only the test-checkout count.
 
 ## Paystack checkout
 

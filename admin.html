@@ -7,8 +7,8 @@
   <title>Admin | APEX ATTIRE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=32">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=34">
 </head>
 <body class="account-page admin-page">
   <header class="account-header admin-site-header">
@@ -37,7 +37,7 @@
       <div class="admin-workspace">
       <div class="admin-workspace-top"><span>APEX ATTIRE / CONTROL ROOM</span><span class="admin-checkout-badge">CHECKOUT OFFLINE</span></div>
       <div class="admin-welcome" id="admin-overview">
-        <div><p class="eyebrow">OVERVIEW</p><h1>Good to have you here.</h1><p>Everything behind the collection, in one place.</p><small class="admin-email"></small></div>
+        <div><p class="eyebrow">OVERVIEW</p><h1>Welcome back, boss!</h1><p>Everything behind the collection, in one place.</p><small class="admin-email"></small></div>
         <button class="button button-secondary admin-sign-out" type="button">Sign out</button>
       </div>
       <div class="admin-grid">
@@ -135,10 +135,16 @@
         <div class="admin-orders-list"></div>
       </section>
       <section class="admin-section" id="admin-analytics">
-        <p class="eyebrow">INSIGHTS / 06</p><h2>Page views</h2>
-        <p>Counts start after the updated storefront goes live. They are page loads, not unique people, and may include repeat visits.</p>
-        <div class="admin-metrics"><div><strong class="admin-views-today-detail">—</strong><span>Today</span></div><div><strong class="admin-views-month">—</strong><span>Last 30 days</span></div></div>
-        <button class="button button-secondary admin-refresh-analytics" type="button">Refresh counts</button>
+        <p class="eyebrow">INSIGHTS / 06</p><h2>Store analytics</h2>
+        <p>Page views are page loads, not unique visitors. Gross revenue includes verified live payments only; it is not profit. Test checkouts do not earn money.</p>
+        <div class="admin-metrics">
+          <div><strong class="admin-views-today-detail">—</strong><span>Page views today</span></div>
+          <div><strong class="admin-views-month">—</strong><span>Page views, last 30 days</span></div>
+          <div><strong class="admin-paid-orders">—</strong><span>Paid live orders</span></div>
+          <div><strong class="admin-gross-revenue">—</strong><span>Gross revenue</span></div>
+          <div><strong class="admin-test-paid-orders">—</strong><span>Paid test checkouts</span></div>
+        </div>
+        <button class="button button-secondary admin-refresh-analytics" type="button">Refresh analytics</button>
         <p class="admin-analytics-status" role="status" aria-live="polite"></p>
       </section>
       </div>
@@ -148,6 +154,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="products.js?v=7"></script>
   <script src="store-config.js?v=5"></script>
-  <script src="admin.js?v=7"></script>
+  <script src="admin.js?v=9"></script>
 </body>
 </html>

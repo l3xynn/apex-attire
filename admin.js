@@ -473,23 +473,22 @@ async function archiveCategory(category) {
 }
 
 async function refreshAnalytics() {
-  analyticsStatus.textContent = "Loading page views…";
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const monthAgo = new Date();
-  monthAgo.setDate(monthAgo.getDate() - 30);
-  const [todayResult, monthResult] = await Promise.all([
-    client.from("store_page_views").select("id", { count: "exact", head: true }).gte("created_at", today.toISOString()),
-    client.from("store_page_views").select("id", { count: "exact", head: true }).gte("created_at", monthAgo.toISOString())
-  ]);
-  if (todayResult.error || monthResult.error) {
-    analyticsStatus.textContent = "Could not load page views yet.";
+  analyticsStatus.textContent = "Loading analytics…";
+  const { data, error } = await client.rpc("admin_store_metrics");
+  const metrics = data?.[0];
+  if (error || !metrics) {
+    analyticsStatus.textContent = "Analytics are unavailable. Apply store-analytics.sql in Supabase, then refresh.";
     return;
   }
-  document.querySelector(".admin-views-today").textContent = todayResult.count.toLocaleString("en-NG");
-  document.querySelector(".admin-views-today-detail").textContent = todayResult.count.toLocaleString("en-NG");
-  document.querySelector(".admin-views-month").textContent = monthResult.count.toLocaleString("en-NG");
-  analyticsStatus.textContent = "Historical counts only. Page-view recording is paused until protected analytics is available.";
+  document.querySelector(".admin-views-today").textContent = Number(metrics.views_today).toLocaleString("en-NG");
+  document.querySelector(".admin-views-today-detail").textContent = Number(metrics.views_today).toLocaleString("en-NG");
+  document.querySelector(".admin-views-month").textContent = Number(metrics.views_30_days).toLocaleString("en-NG");
+  document.querySelector(".admin-paid-orders").textContent = Number(metrics.paid_orders).toLocaleString("en-NG");
+  document.querySelector(".admin-gross-revenue").textContent =
+    `₦${BigInt(metrics.gross_revenue_naira).toLocaleString("en-NG")}`;
+  document.querySelector(".admin-test-paid-orders").textContent =
+    Number(metrics.test_paid_orders).toLocaleString("en-NG");
+  analyticsStatus.textContent = "Updated from recorded views and verified payments.";
 }
 
 async function loadOrders() {
@@ -606,6 +605,7 @@ if (!window.supabase?.createClient) {
     emailDisplay.textContent = userData.user.email || "Admin account";
     gate.hidden = true;
     dashboard.hidden = false;
+    scheduleNavigationHighlight();
     try {
       await loadCatalogue();
     } catch (loadError) {
@@ -618,6 +618,7 @@ if (!window.supabase?.createClient) {
     }
     refreshAnalytics();
     loadOrders();
+    scheduleNavigationHighlight();
   }
   client.auth.onAuthStateChange((event) => {
     if (event === "SIGNED_OUT") {
@@ -673,16 +674,39 @@ if (!window.supabase?.createClient) {
   document.querySelector(".admin-refresh-orders").addEventListener("click", loadOrders);
   ordersFilter.addEventListener("change", loadOrders);
   deliveryForm.addEventListener("submit", saveDeliveryRate);
+  const navigationLinks = [...document.querySelectorAll(".admin-side-nav a")];
+  const navigationSections = navigationLinks.map((link) => document.querySelector(link.hash));
+  let navigationFrame = 0;
+
   function highlightNavigation() {
-    const target = window.location.hash || "#admin-overview";
-    document.querySelectorAll(".admin-side-nav a").forEach((link) => {
-      const active = link.getAttribute("href") === target;
+    if (dashboard.hidden) return;
+    const focusLine = Math.min(window.innerHeight * 0.3, 220);
+    let activeSection = navigationSections[0];
+    for (const section of navigationSections) {
+      if (section.getBoundingClientRect().top > focusLine) break;
+      activeSection = section;
+    }
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+      activeSection = navigationSections[navigationSections.length - 1];
+    }
+    navigationLinks.forEach((link) => {
+      const active = link.hash === `#${activeSection.id}`;
       link.classList.toggle("is-active", active);
       if (active) link.setAttribute("aria-current", "location");
       else link.removeAttribute("aria-current");
     });
   }
-  window.addEventListener("hashchange", highlightNavigation);
-  highlightNavigation();
+
+  function scheduleNavigationHighlight() {
+    if (navigationFrame) return;
+    navigationFrame = window.requestAnimationFrame(() => {
+      navigationFrame = 0;
+      highlightNavigation();
+    });
+  }
+
+  window.addEventListener("scroll", scheduleNavigationHighlight, { passive: true });
+  window.addEventListener("resize", scheduleNavigationHighlight);
+  window.addEventListener("hashchange", scheduleNavigationHighlight);
   checkAccess();
 }
